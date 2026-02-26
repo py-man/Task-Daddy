@@ -50,9 +50,16 @@ Then:
 
 ## Screenshots
 
-<p>
-  <img src="docs/assets/task-daddy-board-preview.png" alt="Task-Daddy board preview" width="49%" />
-  <img src="docs/assets/task-daddy-mobile-preview.png" alt="Task-Daddy mobile preview" width="49%" />
+<p align="center">
+  <img src="docs/assets/task-daddy-demo.gif" alt="Task-Daddy demo animation" width="100%" />
+</p>
+
+<p align="center">
+  <img src="docs/assets/task-daddy-board-preview.png" alt="Task-Daddy board preview" width="100%" />
+</p>
+
+<p align="center">
+  <img src="docs/assets/task-daddy-mobile-preview.png" alt="Task-Daddy mobile preview" width="360" />
 </p>
 
 ## Local dev

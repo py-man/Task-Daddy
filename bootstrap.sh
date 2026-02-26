@@ -10,6 +10,8 @@ else
   exit 1
 fi
 
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-taskdaddy}"
+
 if [ ! -f .env ]; then
   cp .env.example .env
 fi
@@ -20,6 +22,33 @@ if [ ! -f apps/web/.env ]; then
   cp apps/web/.env.example apps/web/.env
 fi
 
+set_env_var() {
+  local file="$1"
+  local key="$2"
+  local val="$3"
+  python3 - "$file" "$key" "$val" <<'PY'
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+key = sys.argv[2]
+val = sys.argv[3]
+lines = path.read_text().splitlines() if path.exists() else []
+prefix = key + "="
+updated = False
+out = []
+for line in lines:
+  if line.startswith(prefix):
+    out.append(f"{key}={val}")
+    updated = True
+  else:
+    out.append(line)
+if not updated:
+  out.append(f"{key}={val}")
+path.write_text("\n".join(out) + "\n")
+PY
+}
+
 # Auto-generate strong local secrets if placeholders are still present.
 if grep -Eq '^APP_SECRET=(|REPLACE_WITH_STRONG_RANDOM_SECRET)$' apps/api/.env || grep -Eq '^FERNET_KEY=(|REPLACE_WITH_FERNET_KEY)$' apps/api/.env; then
   echo "Generating local secrets for apps/api/.env ..."
@@ -27,10 +56,10 @@ if grep -Eq '^APP_SECRET=(|REPLACE_WITH_STRONG_RANDOM_SECRET)$' apps/api/.env ||
   app_secret="$(printf '%s\n' "$sec_out" | awk -F= '/^APP_SECRET=/{print $2; exit}')"
   fernet_key="$(printf '%s\n' "$sec_out" | awk -F= '/^FERNET_KEY=/{print $2; exit}')"
   if [ -n "${app_secret}" ]; then
-    sed -i "s|^APP_SECRET=.*|APP_SECRET=${app_secret}|" apps/api/.env
+    set_env_var apps/api/.env APP_SECRET "${app_secret}"
   fi
   if [ -n "${fernet_key}" ]; then
-    sed -i "s|^FERNET_KEY=.*|FERNET_KEY=${fernet_key}|" apps/api/.env
+    set_env_var apps/api/.env FERNET_KEY "${fernet_key}"
   fi
 fi
 

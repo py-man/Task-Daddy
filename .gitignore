@@ -30,4 +30,4 @@ data/
 artifacts/
 .playwright-cli/
 recovery/
-backups/
+/backups/

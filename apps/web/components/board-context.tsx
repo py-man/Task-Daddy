@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Board, BoardTaskPriority, BoardTaskType, Lane, Task, User } from "@neonlanes/shared/schema";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -40,12 +40,12 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  const selectBoard = (id: string) => {
+  const selectBoard = useCallback((id: string) => {
     setBoardId(id);
     localStorage.setItem("nl:lastBoardId", id);
-  };
+  }, []);
 
-  const refreshAll = async () => {
+  const refreshAll = useCallback(async () => {
     setLoading(true);
     try {
       const [b, us] = await Promise.all([api.boards(), api.users()]);
@@ -82,9 +82,9 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [boardId]);
 
-  const createBoard = async (name: string) => {
+  const createBoard = useCallback(async (name: string) => {
     try {
       const b = await api.createBoard(name);
       toast.success("Board created");
@@ -94,9 +94,9 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     } catch (e: any) {
       toast.error(String(e?.message || e));
     }
-  };
+  }, [refreshAll, selectBoard]);
 
-  const createLane = async (payload: { name: string; stateKey: string; type: string; wipLimit?: number | null }) => {
+  const createLane = useCallback(async (payload: { name: string; stateKey: string; type: string; wipLimit?: number | null }) => {
     if (!boardId) return;
     try {
       await api.createLane(boardId, payload);
@@ -105,9 +105,9 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     } catch (e: any) {
       toast.error(String(e?.message || e));
     }
-  };
+  }, [boardId, refreshAll]);
 
-  const reorderLanes = async (laneIds: string[]) => {
+  const reorderLanes = useCallback(async (laneIds: string[]) => {
     if (!boardId) return;
     try {
       await api.reorderLanes(boardId, laneIds);
@@ -118,9 +118,9 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     } catch (e: any) {
       toast.error(String(e?.message || e));
     }
-  };
+  }, [boardId]);
 
-  const createTask = async (payload: any): Promise<Task> => {
+  const createTask = useCallback(async (payload: any): Promise<Task> => {
     const activeBoardId = board?.id || boardId;
     if (!activeBoardId) throw new Error("No active board selected");
     try {
@@ -140,24 +140,23 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
       toast.error(String(e?.message || e));
       throw e;
     }
-  };
+  }, [board?.id, boardId]);
 
-  const updateTask = async (taskId: string, payload: any) => {
+  const updateTask = useCallback(async (taskId: string, payload: any) => {
     const t = await api.updateTask(taskId, payload);
     setTasks((prev) => prev.map((x) => (x.id === t.id ? t : x)));
     return t;
-  };
+  }, []);
 
-  const moveTask = async (taskId: string, payload: any) => {
+  const moveTask = useCallback(async (taskId: string, payload: any) => {
     const t = await api.moveTask(taskId, payload);
     setTasks((prev) => prev.map((x) => (x.id === t.id ? t : x)));
     return t;
-  };
+  }, []);
 
   useEffect(() => {
-    refreshAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void refreshAll();
+  }, [refreshAll]);
 
   useEffect(() => {
     if (!boardId) return;
@@ -175,8 +174,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
         })
         .catch((e) => toast.error(String(e?.message || e)));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [boardId]);
+  }, [boardId, boards]);
 
   const value = useMemo(
     () => ({
@@ -199,7 +197,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
       updateTask,
       moveTask
     }),
-    [boards, board, lanes, tasks, users, taskTypes, priorities, loading, search]
+    [boards, board, lanes, tasks, users, taskTypes, priorities, loading, search, refreshAll, createBoard, createLane, reorderLanes, createTask, updateTask, moveTask, selectBoard]
   );
 
   return <BoardCtx.Provider value={value}>{children}</BoardCtx.Provider>;

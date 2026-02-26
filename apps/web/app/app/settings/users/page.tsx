@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useSession } from "@/components/session";
@@ -477,8 +478,8 @@ function EditUserDialog({ user, onSaved }: { user: any; onSaved: () => Promise<v
         <div>
           <div className="text-xs text-muted">Avatar logo</div>
           <div className="mt-1 flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl border border-white/10 bg-white/5 overflow-hidden grid place-items-center text-xs text-muted">
-              {avatarPreview ? <img src={avatarPreview} alt="Avatar" className="h-full w-full object-cover" /> : "No logo"}
+            <div className="relative h-12 w-12 rounded-xl border border-white/10 bg-white/5 overflow-hidden grid place-items-center text-xs text-muted">
+              {avatarPreview ? <Image src={avatarPreview} alt="Avatar" fill className="object-cover" sizes="48px" unoptimized /> : "No logo"}
             </div>
             <label className="text-sm underline cursor-pointer">
               Upload image

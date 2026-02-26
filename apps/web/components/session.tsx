@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@neonlanes/shared/schema";
 import { api } from "@/lib/api";
@@ -20,7 +20,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const u = await api.me();
@@ -30,9 +30,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await api.logout();
     } catch (e: any) {
@@ -41,14 +41,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       router.replace("/login");
     }
-  };
+  }, [router]);
 
   useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void refresh();
+  }, [refresh]);
 
-  const value = useMemo(() => ({ user, loading, refresh, logout }), [user, loading]);
+  const value = useMemo(() => ({ user, loading, refresh, logout }), [user, loading, refresh, logout]);
   return <SessionCtx.Provider value={value}>{children}</SessionCtx.Provider>;
 }
 
@@ -57,4 +56,3 @@ export function useSession() {
   if (!v) throw new Error("useSession must be used within SessionProvider");
   return v;
 }
-

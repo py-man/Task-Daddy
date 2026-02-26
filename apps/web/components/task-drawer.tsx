@@ -208,7 +208,7 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
     } else {
       setForm(null);
     }
-  }, [taskId]); // intentionally not depending on task snapshot
+  }, [taskId, task]);
 
   useEffect(() => {
     if (isMobileViewport && tab === "copilot") {

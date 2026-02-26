@@ -16,7 +16,7 @@ if [[ "$BRANCH" != "main" && "${ALLOW_NON_MAIN_START:-0}" != "1" ]]; then
 fi
 export DEPLOY_TRACK=production
 export DEPLOY_BRANCH="$BRANCH"
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-neonlanes}"
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-taskdaddy}"
 ./scripts/pre_restart_backup.sh || echo "Warning: pre-restart backup skipped/failed; continuing startup."
 "${DC[@]}" stop api web db || true
 "${DC[@]}" rm -f api web db || true
