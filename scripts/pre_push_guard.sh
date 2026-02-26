@@ -26,6 +26,8 @@ export API_BIND_HOST="${API_BIND_HOST:-127.0.0.1}"
 export DB_BIND_HOST="${DB_BIND_HOST:-127.0.0.1}"
 export REDIS_BIND_HOST="${REDIS_BIND_HOST:-127.0.0.1}"
 
+./scripts/pre_push_security_gate.sh
+
 echo "pre-push: ensuring taskdaddy stack is up on web=${WEB_PORT} api=${API_PORT}"
 "${DC[@]}" up -d
 
