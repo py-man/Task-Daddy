@@ -23,12 +23,17 @@ export function TaskDaddyLogo({
       className={cn("text-accent", className)}
     >
       <defs>
-        <linearGradient id="td_g" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id="td_lane" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="rgb(var(--accent) / 1)" />
-          <stop offset="1" stopColor="rgb(50 210 200 / 1)" />
+          <stop offset="0.55" stopColor="rgb(64 196 255 / 1)" />
+          <stop offset="1" stopColor="rgb(56 239 192 / 1)" />
         </linearGradient>
-        <filter id="td_glow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="2.4" result="b" />
+        <radialGradient id="td_bg" cx="18%" cy="16%" r="95%">
+          <stop offset="0" stopColor="rgb(18 30 52 / 1)" />
+          <stop offset="1" stopColor="rgb(7 12 24 / 1)" />
+        </radialGradient>
+        <filter id="td_glow" x="-50%" y="-50%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="2.8" result="b" />
           <feColorMatrix
             in="b"
             type="matrix"
@@ -46,17 +51,23 @@ export function TaskDaddyLogo({
         </filter>
       </defs>
 
-      <rect x="5" y="5" width="54" height="54" rx="16" fill="rgb(var(--panel) / 0.65)" stroke="rgb(255 255 255 / 0.10)" />
+      <rect x="4.5" y="4.5" width="55" height="55" rx="16" fill="url(#td_bg)" stroke="rgb(255 255 255 / 0.12)" />
 
-      <g filter="url(#td_glow)" stroke="url(#td_g)" strokeWidth="3.5" strokeLinecap="round" fill="none">
-        <path d="M14 20h22" />
-        <path d="M25 20v24" />
-        <path d="M38 20h7c5 0 9 4 9 9v6c0 5-4 9-9 9h-7V20z" />
+      <g opacity="0.16" stroke="rgb(255 255 255 / 0.36)" strokeWidth="1">
+        <line x1="12" y1="16" x2="52" y2="16" />
+        <line x1="12" y1="48" x2="52" y2="48" />
       </g>
 
-      <g opacity="0.55">
-        <circle cx="50" cy="18" r="1.6" fill="rgb(var(--accent) / 0.9)" />
-        <circle cx="16" cy="48" r="1.2" fill="rgb(50 210 200 / 0.9)" />
+      <g filter="url(#td_glow)" stroke="url(#td_lane)" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M15 18h16v28" />
+        <path d="M31 18h10c7 0 12 5 12 12v2c0 7-5 12-12 12h-10" />
+        <path d="M17 45h31" />
+      </g>
+
+      <g opacity="0.9">
+        <circle cx="31" cy="46" r="2.8" fill="rgb(125 246 226 / 1)" />
+        <circle cx="46" cy="18" r="1.5" fill="rgb(102 223 255 / 0.9)" />
+        <circle cx="16" cy="28" r="1.3" fill="rgb(var(--accent) / 0.9)" />
       </g>
     </svg>
   );
