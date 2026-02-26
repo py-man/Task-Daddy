@@ -9,7 +9,7 @@ fi
 export DEPLOY_TRACK=production
 export DEPLOY_BRANCH="$BRANCH"
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-neonlanes}"
-./scripts/pre_restart_backup.sh
+./scripts/pre_restart_backup.sh || echo "Warning: pre-restart backup skipped/failed; continuing startup."
 docker-compose stop api web db || true
 docker-compose rm -f api web db || true
 docker-compose up --build -d

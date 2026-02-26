@@ -15,7 +15,7 @@ db_container="$(
 
 if [[ -z "${db_container}" ]]; then
   echo "No running Task-Daddy postgres container found; backup skipped." >&2
-  exit 1
+  exit 0
 fi
 
 pg_user="$(docker inspect "${db_container}" --format '{{range .Config.Env}}{{println .}}{{end}}' | awk -F= '/^POSTGRES_USER=/{print $2; exit}')"
@@ -24,7 +24,7 @@ pg_db="$(docker inspect "${db_container}" --format '{{range .Config.Env}}{{print
 
 if [[ -z "${pg_user}" || -z "${pg_pass}" || -z "${pg_db}" ]]; then
   echo "Unable to read postgres env from ${db_container}; aborting backup." >&2
-  exit 1
+  exit 0
 fi
 
 out="${BACKUP_DIR}/neonlanes_db_${ts}.dump"
