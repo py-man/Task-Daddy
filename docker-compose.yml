@@ -70,7 +70,7 @@ services:
       - "com.neonlanes.track=${DEPLOY_TRACK:-production}"
       - "com.neonlanes.branch=${DEPLOY_BRANCH:-main}"
     ports:
-      - "${WEB_BIND_HOST:-127.0.0.1}:${WEB_PORT:-3005}:3000"
+      - "${WEB_BIND_HOST:-127.0.0.1}:${WEB_PORT:-3010}:3000"
 
 volumes:
   neonlanes_db:

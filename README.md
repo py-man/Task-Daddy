@@ -17,9 +17,10 @@ cd task-daddy
 ./bootstrap.sh
 ```
 
-Open: `http://localhost:3005`
+Open: `http://localhost:3010`
 
-Get the generated login credentials:
+`./bootstrap.sh` prints generated login credentials when startup finishes.
+If you need to fetch them again:
 
 ```bash
 docker compose exec api cat /app/data/backups/bootstrap_credentials.txt
@@ -62,7 +63,7 @@ cp apps/web/.env.example apps/web/.env
 ```
 
 Services:
-- Web: `http://localhost:3005`
+- Web: `http://localhost:3010`
 - API: `http://localhost:8000`
 - API docs: `http://localhost:8000/docs`
 
