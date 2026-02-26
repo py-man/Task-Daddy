@@ -48,6 +48,7 @@ if [[ "$PHASE" == "pre" ]]; then
 fi
 
 log "release_gate $PHASE: checking health endpoints"
+./scripts/check_port_docs_sync.sh
 wait_for_url "http://127.0.0.1:8000/health" "api_health" 90 1
 wait_for_url "http://127.0.0.1:3000/version" "web_version" 90 1
 wait_for_url "http://127.0.0.1:3000/api/health" "web_api_proxy" 90 1

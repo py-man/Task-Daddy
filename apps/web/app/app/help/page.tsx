@@ -94,7 +94,7 @@ export default function HelpPage() {
             <Section id="api-and-webhooks" title="API + Webhooks">
               <div className="text-xs text-muted mb-2">Useful endpoints</div>
               <pre className="rounded-2xl border border-white/10 bg-black/30 p-3 text-xs overflow-auto">
-{`Web app proxy: http://localhost:3005/api
+{`Web app proxy: http://localhost:3010/api
 Direct API:    http://localhost:8000
 
 Inbound webhook:

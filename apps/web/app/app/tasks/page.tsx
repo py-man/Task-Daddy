@@ -78,7 +78,7 @@ export default function MyTasksPage() {
       });
     }
     return base;
-  }, [tasks, user?.id, preset, laneTypeById]);
+  }, [tasks, user?.id, preset, laneTypeById, priorityRank]);
 
   const ordered = useMemo(() => {
     const out = [...mine];

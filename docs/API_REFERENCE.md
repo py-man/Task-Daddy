@@ -232,6 +232,6 @@ If you want a one-off Pushover message from your shell (without storing credenti
 
 ```bash
 PUSHOVER_APP_TOKEN="..." PUSHOVER_USER_KEY="..." \
-TITLE="Task-Daddy" MESSAGE="Open-source build ready: http://localhost:3005" \
+TITLE="Task-Daddy" MESSAGE="Open-source build ready: http://localhost:3010" \
 ./scripts/pushover_notify.sh
 ```

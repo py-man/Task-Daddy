@@ -42,10 +42,10 @@ Use this before publishing an image/repo to public users.
 3. Verify health:
    - `curl -sf http://127.0.0.1:8000/health` -> `{"ok":true}`
    - `curl -sf http://127.0.0.1:8000/version` -> includes version string
-   - `curl -sf http://127.0.0.1:3005/version` -> returns web version payload
+   - `curl -sf http://127.0.0.1:3010/version` -> returns web version payload
 4. Smoke (open-source web port):
-   - `WEB_BASE=http://127.0.0.1:3005 ./scripts/smoke.sh`
-   - expected tail: `smoke_ok web=http://127.0.0.1:3005 api=http://127.0.0.1:8000 ...`
+   - `WEB_BASE=http://127.0.0.1:3010 ./scripts/smoke.sh`
+   - expected tail: `smoke_ok web=http://127.0.0.1:3010 api=http://127.0.0.1:8000 ...`
 5. Backend tests (minimum targeted set for shipped integrations):
    - `docker-compose run --rm api bash -lc "cd /app && pytest -q tests/test_task_reminders_and_ics.py tests/test_openproject_integrations.py tests/test_openproject_task_actions.py"`
 6. Web checks:

@@ -31,7 +31,6 @@ export default function CalendarPage() {
       });
   }, [tasks, search]);
 
-  const monthKey = `${cursor.getFullYear()}-${cursor.getMonth()}`;
   const grid = useMemo(() => {
     const first = startOfMonth(cursor);
     const offset = (first.getDay() + 6) % 7; // monday=0
@@ -44,7 +43,7 @@ export default function CalendarPage() {
       days.push(d);
     }
     return days;
-  }, [monthKey]);
+  }, [cursor]);
 
   const byDay = useMemo(() => {
     const map = new Map<string, any[]>();

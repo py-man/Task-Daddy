@@ -1,7 +1,7 @@
 # Task-Daddy
 
 <p align="center">
-  <img src="docs/assets/task-daddy-hero.svg" alt="Task-Daddy hero" width="100%" />
+  <img src="docs/assets/task-daddy-hero.png" alt="Task-Daddy hero" width="100%" />
 </p>
 
 <p align="center"><strong>Small tasks. Big momentum.</strong></p>
@@ -49,8 +49,8 @@ Then:
 ## Screenshots
 
 <p>
-  <img src="docs/assets/task-daddy-board-preview.svg" alt="Task-Daddy board preview" width="49%" />
-  <img src="docs/assets/task-daddy-mobile-preview.svg" alt="Task-Daddy mobile preview" width="49%" />
+  <img src="docs/assets/task-daddy-board-preview.png" alt="Task-Daddy board preview" width="49%" />
+  <img src="docs/assets/task-daddy-mobile-preview.png" alt="Task-Daddy mobile preview" width="49%" />
 </p>
 
 ## Local dev
