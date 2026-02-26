@@ -37,9 +37,14 @@ fi
 # 3) Block known private identifiers from this project context.
 identifier_pattern='kevin\.brannigan|technosludge|heli-pay|gpecom|globalpay|globalpayments'
 if git grep -nEi "$identifier_pattern" -- . ':(exclude)docs/*' ':(exclude)README.md' >/tmp/taskdaddy_identifier_hits.txt; then
-  echo "BLOCKED: private/project-specific identifiers found in tracked source:" >&2
-  cat /tmp/taskdaddy_identifier_hits.txt >&2
-  exit 1
+  grep -v 'scripts/pre_push_security_gate.sh:' /tmp/taskdaddy_identifier_hits.txt > /tmp/taskdaddy_identifier_hits_filtered.txt || true
+  if ! [ -s /tmp/taskdaddy_identifier_hits_filtered.txt ]; then
+    echo "pre-push security: identifier allowlist filtered self-reference only"
+  else
+    echo "BLOCKED: private/project-specific identifiers found in tracked source:" >&2
+    cat /tmp/taskdaddy_identifier_hits_filtered.txt >&2
+    exit 1
+  fi
 fi
 
 # 4) Optional deep history scan for outgoing commits with gitleaks.
