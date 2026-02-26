@@ -19,6 +19,9 @@ cd task-daddy
 
 Open: `http://localhost:3010`
 
+`bootstrap.sh` defaults to fast startup (`docker-compose up -d`) for cleaner logs.
+Use `FORCE_BUILD=1 ./bootstrap.sh` when you need a full rebuild.
+
 `./bootstrap.sh` prints generated login credentials when startup finishes.
 If you need to fetch them again:
 

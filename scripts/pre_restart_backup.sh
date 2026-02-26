@@ -14,7 +14,9 @@ db_container="$(
 )"
 
 if [[ -z "${db_container}" ]]; then
-  echo "No running Task-Daddy postgres container found; backup skipped." >&2
+  if [[ "${BACKUP_QUIET:-0}" != "1" ]]; then
+    echo "No running Task-Daddy postgres container found; backup skipped." >&2
+  fi
   exit 0
 fi
 
@@ -23,7 +25,9 @@ pg_pass="$(docker inspect "${db_container}" --format '{{range .Config.Env}}{{pri
 pg_db="$(docker inspect "${db_container}" --format '{{range .Config.Env}}{{println .}}{{end}}' | awk -F= '/^POSTGRES_DB=/{print $2; exit}')"
 
 if [[ -z "${pg_user}" || -z "${pg_pass}" || -z "${pg_db}" ]]; then
-  echo "Unable to read postgres env from ${db_container}; aborting backup." >&2
+  if [[ "${BACKUP_QUIET:-0}" != "1" ]]; then
+    echo "Unable to read postgres env from ${db_container}; aborting backup." >&2
+  fi
   exit 0
 fi
 

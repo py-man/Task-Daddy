@@ -17,7 +17,11 @@ fi
 export DEPLOY_TRACK=production
 export DEPLOY_BRANCH="$BRANCH"
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-taskdaddy}"
-./scripts/pre_restart_backup.sh || echo "Warning: pre-restart backup skipped/failed; continuing startup."
-"${DC[@]}" stop api web db || true
-"${DC[@]}" rm -f api web db || true
-"${DC[@]}" up --build -d
+BACKUP_QUIET=1 ./scripts/pre_restart_backup.sh || echo "Warning: pre-restart backup skipped/failed; continuing startup."
+"${DC[@]}" stop api web db >/dev/null 2>&1 || true
+"${DC[@]}" rm -f api web db >/dev/null 2>&1 || true
+if [[ "${FORCE_BUILD:-0}" == "1" ]]; then
+  "${DC[@]}" up --build -d
+else
+  "${DC[@]}" up -d
+fi

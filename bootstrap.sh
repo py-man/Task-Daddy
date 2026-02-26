@@ -50,7 +50,7 @@ PY
 }
 
 # Auto-generate strong local secrets if placeholders are still present.
-if grep -Eq '^APP_SECRET=(|REPLACE_WITH_STRONG_RANDOM_SECRET)$' apps/api/.env || grep -Eq '^FERNET_KEY=(|REPLACE_WITH_FERNET_KEY)$' apps/api/.env; then
+if grep -Eq '^APP_SECRET=($|REPLACE_WITH_STRONG_RANDOM_SECRET)$' apps/api/.env || grep -Eq '^FERNET_KEY=($|REPLACE_WITH_FERNET_KEY)$' apps/api/.env; then
   echo "Generating local secrets for apps/api/.env ..."
   sec_out="$(./scripts/generate_prod_secrets.sh)"
   app_secret="$(printf '%s\n' "$sec_out" | awk -F= '/^APP_SECRET=/{print $2; exit}')"
