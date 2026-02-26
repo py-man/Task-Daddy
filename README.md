@@ -66,6 +66,20 @@ Services:
 - API: `http://localhost:8000`
 - API docs: `http://localhost:8000/docs`
 
+## Push safety gate (recommended)
+
+To enforce "Task-Daddy must pass smoke on `3010` before push":
+
+```bash
+./scripts/install_git_hooks.sh
+```
+
+Manual run anytime:
+
+```bash
+./scripts/pre_push_guard.sh
+```
+
 ## Security baseline (before internet exposure)
 
 Set strong values for:
