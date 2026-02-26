@@ -49,6 +49,9 @@ path.write_text("\n".join(out) + "\n")
 PY
 }
 
+# Local bootstrap must allow HTTP localhost sessions.
+set_env_var apps/api/.env COOKIE_SECURE "false"
+
 # Auto-generate strong local secrets if placeholders are still present.
 if grep -Eq '^APP_SECRET=($|REPLACE_WITH_STRONG_RANDOM_SECRET)$' apps/api/.env || grep -Eq '^FERNET_KEY=($|REPLACE_WITH_FERNET_KEY)$' apps/api/.env; then
   echo "Generating local secrets for apps/api/.env ..."
