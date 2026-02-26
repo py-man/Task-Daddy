@@ -1,9 +1,5 @@
 # Task-Daddy
 
-<p align="center">
-  <img src="docs/assets/task-daddy-hero.png" alt="Task-Daddy hero" width="100%" />
-</p>
-
 <p align="center"><strong>Small tasks. Big momentum.</strong></p>
 
 Stop keeping your whole life in your head.
@@ -53,17 +49,8 @@ Then:
 
 ## Screenshots
 
-<p align="center">
-  <img src="docs/assets/task-daddy-demo.gif" alt="Task-Daddy demo animation" width="100%" />
-</p>
-
-<p align="center">
-  <img src="docs/assets/task-daddy-board-preview.png" alt="Task-Daddy board preview" width="100%" />
-</p>
-
-<p align="center">
-  <img src="docs/assets/task-daddy-mobile-preview.png" alt="Task-Daddy mobile preview" width="360" />
-</p>
+Screenshots and demo media are intentionally omitted in this commit.
+Add your own final assets in `docs/assets/` before publishing.
 
 ## Local dev
 

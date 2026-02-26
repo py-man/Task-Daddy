@@ -540,7 +540,7 @@ def _parse_db_url_parts() -> tuple[str, int, str, str | None, str]:
 async def create_machine_recovery_export(db: AsyncSession) -> BackupInfo:
   backup_dir = _ensure_backup_dir()
   created = _now_utc()
-  export_name = f"neonlanes_full_export_{created.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.tar.gz"
+  export_name = f"taskdaddy_full_export_{created.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.tar.gz"
   export_path = backup_dir / export_name
 
   # Build the existing logical+attachments backup first.
@@ -549,7 +549,7 @@ async def create_machine_recovery_export(db: AsyncSession) -> BackupInfo:
 
   host, port, user, password, dbname = _parse_db_url_parts()
 
-  with tempfile.TemporaryDirectory(prefix="neonlanes_full_export_") as td:
+  with tempfile.TemporaryDirectory(prefix="taskdaddy_full_export_") as td:
     td_path = Path(td)
     pg_dump_path = td_path / "pg_dump.custom"
     meta_path = td_path / "metadata.json"
@@ -601,7 +601,9 @@ def list_backups() -> list[BackupInfo]:
   out: list[BackupInfo] = []
   archives = []
   archives.extend(backup_dir.glob("neonlanes_backup_*.tar.gz"))
+  archives.extend(backup_dir.glob("taskdaddy_backup_*.tar.gz"))
   archives.extend(backup_dir.glob("neonlanes_full_export_*.tar.gz"))
+  archives.extend(backup_dir.glob("taskdaddy_full_export_*.tar.gz"))
   for p in sorted(archives, key=lambda x: x.stat().st_mtime, reverse=True):
     st = p.stat()
     created = datetime.fromtimestamp(st.st_mtime, tz=timezone.utc).isoformat().replace("+00:00", "Z")

@@ -7,11 +7,18 @@ mkdir -p "${BACKUP_DIR}"
 
 ts="$(date -u +%Y%m%dT%H%M%SZ)"
 
-# Prefer running Task-Daddy DB container if present.
+# Prefer current compose project DB container; fall back to known prefixes.
+project="${COMPOSE_PROJECT_NAME:-taskdaddy}"
 db_container="$(
   docker ps --format '{{.Names}} {{.Image}}' \
-    | awk '/postgres:16/ && /neonlanes/ && /db/ { print $1; exit }'
+    | awk -v pfx="${project}_" '$2 ~ /postgres:16/ && index($1, pfx) == 1 && $1 ~ /db/ { print $1; exit }'
 )"
+if [[ -z "${db_container}" ]]; then
+  db_container="$(
+    docker ps --format '{{.Names}} {{.Image}}' \
+      | awk '$2 ~ /postgres:16/ && ($1 ~ /^taskdaddy_/ || $1 ~ /^neonlanes_/) && $1 ~ /db/ { print $1; exit }'
+  )"
+fi
 
 if [[ -z "${db_container}" ]]; then
   if [[ "${BACKUP_QUIET:-0}" != "1" ]]; then

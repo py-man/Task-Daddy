@@ -119,7 +119,7 @@ export default function SettingsBackupsPage() {
                     {b.createdAt} • {(Number(b.sizeBytes || 0) / (1024 * 1024)).toFixed(2)} MB
                   </div>
                   <div className="mt-1 text-xs text-muted">
-                    {String(b.filename || "").startsWith("neonlanes_full_export_")
+                    {String(b.filename || "").startsWith("neonlanes_full_export_") || String(b.filename || "").startsWith("taskdaddy_full_export_")
                       ? "Type: Full export (DB dump + app backup)"
                       : "Type: App backup"}
                   </div>
