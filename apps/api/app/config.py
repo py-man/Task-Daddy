@@ -7,14 +7,15 @@ class Settings(BaseSettings):
   model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
   database_url: str = "postgresql+asyncpg://neonlanes:neonlanes@db:5432/neonlanes"
-  app_secret: str = "dev-secret-change-me"
-  fernet_key: str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  app_secret: str = ""
+  fernet_key: str = ""
   app_version: str = "v2026-02-26+r3-hardening"
   build_sha: str = "dev"
 
-  cookie_secure: bool = False
+  cookie_secure: bool = True
   cookie_domain: str | None = None
   force_logout_on_start: bool = False
+  api_docs_enabled: bool = False
 
   rate_limit_login_ip_per_minute: int = 60
   rate_limit_login_email_per_minute: int = 20

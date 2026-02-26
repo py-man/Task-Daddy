@@ -34,7 +34,13 @@ from app.backups.service import create_full_backup, get_backup_policy, purge_old
 from app.reminders.service import dispatch_due_reminders_once
 from app.metrics import runtime_metrics
 
-app = FastAPI(title="Task-Daddy API", version="0.1.0")
+app = FastAPI(
+  title="Task-Daddy API",
+  version="0.1.0",
+  docs_url="/docs" if settings.api_docs_enabled else None,
+  redoc_url="/redoc" if settings.api_docs_enabled else None,
+  openapi_url="/openapi.json" if settings.api_docs_enabled else None,
+)
 
 
 @app.exception_handler(JiraApiError)
@@ -222,6 +228,10 @@ async def _startup() -> None:
   global _jira_loop_task, _backup_loop_task, _reminder_loop_task
   if _is_test_db():
     return
+  if not settings.app_secret or settings.app_secret.strip().lower() in {"dev-secret-change-me", "replace_with_strong_random_secret"}:
+    raise RuntimeError("APP_SECRET is required and must not be a placeholder")
+  if not settings.fernet_key or settings.fernet_key.strip() in {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", "REPLACE_WITH_FERNET_KEY"}:
+    raise RuntimeError("FERNET_KEY is required and must not be a placeholder")
   if settings.force_logout_on_start:
     await _force_logout_on_startup()
   if settings.jira_auto_sync_enabled and _jira_loop_task is None:

@@ -6,13 +6,13 @@ services:
       - "com.neonlanes.track=${DEPLOY_TRACK:-production}"
       - "com.neonlanes.branch=${DEPLOY_BRANCH:-main}"
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_BIND_HOST:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
 
   db:
     image: postgres:16
     environment:
       POSTGRES_USER: neonlanes
-      POSTGRES_PASSWORD: neonlanes
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local}
       POSTGRES_DB: neonlanes
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U neonlanes -d neonlanes"]
@@ -23,7 +23,7 @@ services:
       - "com.neonlanes.track=${DEPLOY_TRACK:-production}"
       - "com.neonlanes.branch=${DEPLOY_BRANCH:-main}"
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_BIND_HOST:-127.0.0.1}:${DB_PORT:-5432}:5432"
     volumes:
       - neonlanes_db:/var/lib/postgresql/data
       - ./apps/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -36,7 +36,8 @@ services:
     environment:
       # Keep local docker quickstart deterministic even if apps/api/.env
       # was previously customized for production credentials.
-      DATABASE_URL: postgresql+asyncpg://neonlanes:neonlanes@db:5432/neonlanes
+      DATABASE_URL: postgresql+asyncpg://neonlanes:${POSTGRES_PASSWORD:-change-me-local}@db:5432/neonlanes
+      API_DOCS_ENABLED: "true"
     depends_on:
       db:
         condition: service_healthy
@@ -46,7 +47,7 @@ services:
       - "com.neonlanes.track=${DEPLOY_TRACK:-production}"
       - "com.neonlanes.branch=${DEPLOY_BRANCH:-main}"
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "${API_BIND_HOST:-127.0.0.1}:${API_PORT:-8000}:8000"
     volumes:
       - neonlanes_uploads:/app/data/uploads
       - neonlanes_backups:/app/data/backups
@@ -69,7 +70,7 @@ services:
       - "com.neonlanes.track=${DEPLOY_TRACK:-production}"
       - "com.neonlanes.branch=${DEPLOY_BRANCH:-main}"
     ports:
-      - "${WEB_PORT:-3005}:3000"
+      - "${WEB_BIND_HOST:-127.0.0.1}:${WEB_PORT:-3005}:3000"
 
 volumes:
   neonlanes_db:
