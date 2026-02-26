@@ -1,0 +1,14 @@
+{
+  "name": "neonlanes",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "npm -w @neonlanes/web run lint",
+    "format": "npm -w @neonlanes/web run format",
+    "typecheck": "npm -w @neonlanes/web run typecheck"
+  }
+}
+

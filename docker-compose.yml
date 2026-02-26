@@ -1,0 +1,77 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    labels:
+      - "com.neonlanes.track=${DEPLOY_TRACK:-production}"
+      - "com.neonlanes.branch=${DEPLOY_BRANCH:-main}"
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: neonlanes
+      POSTGRES_PASSWORD: neonlanes
+      POSTGRES_DB: neonlanes
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neonlanes -d neonlanes"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    labels:
+      - "com.neonlanes.track=${DEPLOY_TRACK:-production}"
+      - "com.neonlanes.branch=${DEPLOY_BRANCH:-main}"
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - neonlanes_db:/var/lib/postgresql/data
+      - ./apps/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  api:
+    build:
+      context: ./apps/api
+    env_file:
+      - ./apps/api/.env
+    environment:
+      # Keep local docker quickstart deterministic even if apps/api/.env
+      # was previously customized for production credentials.
+      DATABASE_URL: postgresql+asyncpg://neonlanes:neonlanes@db:5432/neonlanes
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    labels:
+      - "com.neonlanes.track=${DEPLOY_TRACK:-production}"
+      - "com.neonlanes.branch=${DEPLOY_BRANCH:-main}"
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - neonlanes_uploads:/app/data/uploads
+      - neonlanes_backups:/app/data/backups
+    command: >
+      bash -lc "cd /app &&
+      until pg_isready -h db -p 5432 -U neonlanes -d neonlanes; do echo 'waiting for db'; sleep 1; done &&
+      alembic upgrade head &&
+      python -m app.seed &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      - api
+    labels:
+      - "com.neonlanes.track=${DEPLOY_TRACK:-production}"
+      - "com.neonlanes.branch=${DEPLOY_BRANCH:-main}"
+    ports:
+      - "${WEB_PORT:-3005}:3000"
+
+volumes:
+  neonlanes_db:
+  neonlanes_uploads:
+  neonlanes_backups:

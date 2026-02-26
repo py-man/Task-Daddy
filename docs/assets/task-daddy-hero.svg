@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Task-Daddy hero graphic">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b132b"/>
+      <stop offset="50%" stop-color="#1c2541"/>
+      <stop offset="100%" stop-color="#3a506b"/>
+    </linearGradient>
+    <linearGradient id="chip" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4cc9f0"/>
+      <stop offset="100%" stop-color="#80ed99"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="420" fill="url(#bg)" rx="24"/>
+  <circle cx="1040" cy="80" r="110" fill="#4cc9f0" opacity="0.12"/>
+  <circle cx="180" cy="350" r="150" fill="#80ed99" opacity="0.10"/>
+  <rect x="72" y="60" width="510" height="300" rx="24" fill="#ffffff" opacity="0.08"/>
+  <rect x="110" y="108" width="280" height="26" rx="13" fill="url(#chip)"/>
+  <rect x="110" y="154" width="430" height="16" rx="8" fill="#ffffff" opacity="0.7"/>
+  <rect x="110" y="184" width="390" height="16" rx="8" fill="#ffffff" opacity="0.45"/>
+  <rect x="110" y="214" width="350" height="16" rx="8" fill="#ffffff" opacity="0.3"/>
+  <rect x="110" y="258" width="160" height="42" rx="21" fill="#80ed99" opacity="0.9"/>
+  <text x="620" y="165" fill="#ffffff" font-family="Arial, sans-serif" font-size="64" font-weight="700">Task-Daddy</text>
+  <text x="620" y="216" fill="#d8f3ff" font-family="Arial, sans-serif" font-size="30" font-weight="500">Small tasks. Big momentum.</text>
+  <text x="620" y="274" fill="#c7d8e8" font-family="Arial, sans-serif" font-size="22">Capture fast. Plan smart. Ship more.</text>
+</svg>

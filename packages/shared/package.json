@@ -1,0 +1,14 @@
+{
+  "name": "@neonlanes/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./schema": "./src/schema.ts",
+    "./types": "./src/types.ts"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  }
+}
+

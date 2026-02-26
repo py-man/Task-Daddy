@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080a12"/>
+      <stop offset="1" stop-color="#0b1020"/>
+    </linearGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M 36 0 L 0 0 0 36" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+      <circle cx="0" cy="0" r="1.2" fill="rgba(115,255,209,0.35)"/>
+    </pattern>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch" />
+      <feColorMatrix type="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0 0 0 .22 0"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="520" fill="url(#bg)"/>
+
+  <g font-family="ui-sans-serif, system-ui" fill="rgba(245,247,255,0.86)">
+    <text x="36" y="54" font-size="20" font-weight="700">Task-Daddy Background Layer — Preview</text>
+    <text x="36" y="84" font-size="13" fill="rgba(160,170,190,0.9)">Static concept only. Actual implementation is CSS + reduced-motion safe.</text>
+  </g>
+
+  <!-- Grid -->
+  <g transform="translate(36,120)">
+    <rect width="360" height="330" rx="26" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.10)"/>
+    <rect x="14" y="14" width="332" height="302" rx="20" fill="rgba(8,10,18,0.55)"/>
+    <rect x="14" y="14" width="332" height="302" rx="20" fill="url(#grid)" opacity="0.35"/>
+    <text x="22" y="48" font-size="14" font-weight="700" fill="rgba(245,247,255,0.9)">Grid</text>
+    <text x="22" y="70" font-size="12" fill="rgba(160,170,190,0.95)">subtle parallax lines + nodes</text>
+  </g>
+
+  <!-- Grain -->
+  <g transform="translate(420,120)">
+    <rect width="360" height="330" rx="26" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.10)"/>
+    <rect x="14" y="14" width="332" height="302" rx="20" fill="rgba(8,10,18,0.55)"/>
+    <rect x="14" y="14" width="332" height="302" rx="20" filter="url(#grain)" opacity="0.55"/>
+    <text x="22" y="48" font-size="14" font-weight="700" fill="rgba(245,247,255,0.9)">Grain</text>
+    <text x="22" y="70" font-size="12" fill="rgba(160,170,190,0.95)">soft noise overlay depth</text>
+  </g>
+
+  <!-- ASCII -->
+  <g transform="translate(804,120)">
+    <rect width="360" height="330" rx="26" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.10)"/>
+    <rect x="14" y="14" width="332" height="302" rx="20" fill="rgba(8,10,18,0.55)"/>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="10" fill="rgba(255,255,255,0.08)">
+      <text x="28" y="56">+ . : # + . : # + . : # + . : # + . : # + . : #</text>
+      <text x="28" y="74">. : # + . : # + . : # + . : # + . : # + . : # +</text>
+      <text x="28" y="92">: # + . : # + . : # + . : # + . : # + . : # + .</text>
+      <text x="28" y="110"># + . : # + . : # + . : # + . : # + . : # + . :</text>
+      <text x="28" y="128">+ . : # + . : # + . : # + . : # + . : # + . : #</text>
+      <text x="28" y="146">. : # + . : # + . : # + . : # + . : # + . : # +</text>
+      <text x="28" y="164">: # + . : # + . : # + . : # + . : # + . : # + .</text>
+      <text x="28" y="182"># + . : # + . : # + . : # + . : # + . : # + . :</text>
+      <text x="28" y="200">+ . : # + . : # + . : # + . : # + . : # + . : #</text>
+      <text x="28" y="218">. : # + . : # + . : # + . : # + . : # + . : # +</text>
+      <text x="28" y="236">: # + . : # + . : # + . : # + . : # + . : # + .</text>
+      <text x="28" y="254"># + . : # + . : # + . : # + . : # + . : # + . :</text>
+      <text x="28" y="272">+ . : # + . : # + . : # + . : # + . : # + . : #</text>
+      <text x="28" y="290">. : # + . : # + . : # + . : # + . : # + . : # +</text>
+    </g>
+    <text x="22" y="48" font-size="14" font-weight="700" fill="rgba(245,247,255,0.9)">ASCII</text>
+    <text x="22" y="70" font-size="12" fill="rgba(160,170,190,0.95)">monospace wallpaper feel</text>
+  </g>
+</svg>
+

@@ -1,0 +1,24 @@
+{
+  "name": "@neonlanes/ios-shell",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Task-Daddy iOS Capacitor wrapper",
+  "scripts": {
+    "prepare:webdir": "node scripts/ensure-webdir.mjs",
+    "ios:add": "npm run prepare:webdir && (test -d ios/App && echo \"iOS platform already added\" || npm exec --workspaces=false -- cap add ios)",
+    "ios:sync": "npm run prepare:webdir && npm exec --workspaces=false -- cap sync ios",
+    "ios:open": "npm exec --workspaces=false -- cap open ios",
+    "ios:archive": "bash scripts/build_ios_archive.sh",
+    "ios:export:appstore": "bash scripts/export_ipa.sh appstore",
+    "ios:export:adhoc": "bash scripts/export_ipa.sh adhoc",
+    "ios:build-upload": "bash scripts/build_and_upload_testflight.sh"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/ios": "^6.2.0",
+    "typescript": "^5.7.3"
+  }
+}

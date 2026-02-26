@@ -1,0 +1,33 @@
+node_modules
+.next
+dist
+.turbo
+.DS_Store
+*.tsbuildinfo
+
+# env
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# db/data
+data/
+*.sqlite3
+
+# logs
+*.log
+
+# local artifacts
+artifacts/
+.playwright-cli/
+recovery/
+backups/

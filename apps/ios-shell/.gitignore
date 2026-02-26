@@ -1,0 +1,7 @@
+node_modules
+dist
+www
+build
+ios
+.DS_Store
+
