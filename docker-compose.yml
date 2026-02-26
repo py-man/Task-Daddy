@@ -56,6 +56,10 @@ services:
       - neonlanes_backups:/app/data/backups
     command: >
       bash -lc "cd /app &&
+      if [ -z \"${APP_SECRET:-}\" ] || [ \"${APP_SECRET}\" = \"REPLACE_WITH_STRONG_RANDOM_SECRET\" ] || [ \"${APP_SECRET}\" = \"dev-secret-change-me\" ]; then
+        export APP_SECRET=$$(python -c \"import secrets; print(secrets.token_urlsafe(48))\"); echo 'api: generated runtime APP_SECRET for local startup'; fi &&
+      if [ -z \"${FERNET_KEY:-}\" ] || [ \"${FERNET_KEY}\" = \"REPLACE_WITH_FERNET_KEY\" ] || [ \"${FERNET_KEY}\" = \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\" ]; then
+        export FERNET_KEY=$$(python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\"); echo 'api: generated runtime FERNET_KEY for local startup'; fi &&
       until pg_isready -h db -p 5432 -U neonlanes -d neonlanes; do echo 'waiting for db'; sleep 1; done &&
       alembic upgrade head &&
       python -m app.seed &&
