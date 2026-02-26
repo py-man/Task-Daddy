@@ -1,6 +1,15 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+if command -v docker-compose >/dev/null 2>&1; then
+  DC=(docker-compose)
+elif docker compose version >/dev/null 2>&1; then
+  DC=(docker compose)
+else
+  echo "Neither 'docker compose' nor 'docker-compose' is installed." >&2
+  exit 1
+fi
+
 if [ ! -f .env ]; then
   cp .env.example .env
 fi
@@ -31,12 +40,23 @@ echo
 echo "Task-Daddy bootstrap complete."
 echo "Web: http://localhost:${WEB_PORT:-3010}"
 echo "Login credentials:"
-for _ in $(seq 1 30); do
-  if docker compose exec -T api sh -lc 'test -f /app/data/backups/bootstrap_credentials.txt' >/dev/null 2>&1; then
-    docker compose exec -T api cat /app/data/backups/bootstrap_credentials.txt
+for _ in $(seq 1 45); do
+  if ! "${DC[@]}" ps api 2>/dev/null | tail -n +2 | grep -Eiq 'up|running'; then
+    sleep 1
+    continue
+  fi
+  if "${DC[@]}" exec -T api sh -lc 'test -f /app/data/backups/bootstrap_credentials.txt' >/dev/null 2>&1; then
+    "${DC[@]}" exec -T api cat /app/data/backups/bootstrap_credentials.txt
     exit 0
   fi
   sleep 1
 done
-echo "Could not read bootstrap credentials yet. Run:"
-echo "  docker compose exec api cat /app/data/backups/bootstrap_credentials.txt"
+echo "Could not read bootstrap credentials yet." >&2
+if ! "${DC[@]}" ps api 2>/dev/null | tail -n +2 | grep -Eiq 'up|running'; then
+  echo "API service is not running. Recent API logs:" >&2
+  "${DC[@]}" logs --tail=120 api || true
+else
+  echo "Run this to fetch credentials manually:" >&2
+  echo "  ${DC[*]} exec api cat /app/data/backups/bootstrap_credentials.txt" >&2
+fi
+exit 1

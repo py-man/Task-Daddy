@@ -23,7 +23,9 @@ Open: `http://localhost:3010`
 If you need to fetch them again:
 
 ```bash
-docker compose exec api cat /app/data/backups/bootstrap_credentials.txt
+docker-compose exec api cat /app/data/backups/bootstrap_credentials.txt
+# If your Docker install uses Compose v2 plugin instead:
+# docker compose exec api cat /app/data/backups/bootstrap_credentials.txt
 ```
 
 If your compose project name is custom, this also works:
