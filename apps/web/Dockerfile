@@ -1,12 +1,17 @@
 FROM node:20-slim AS deps
 
 WORKDIR /repo
+ENV NPM_CONFIG_LOGLEVEL=error
+ENV NPM_CONFIG_AUDIT=false
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
+ENV NPM_CONFIG_PROGRESS=false
 
 COPY package.json package-lock.json /repo/
 COPY apps/web/package.json /repo/apps/web/package.json
 COPY packages/shared/package.json /repo/packages/shared/package.json
 
-RUN npm ci
+RUN npm ci --no-audit --no-fund --loglevel=error
 
 FROM deps AS builder
 

@@ -2,6 +2,7 @@ services:
   redis:
     image: redis:7-alpine
     command: ["redis-server", "--save", "", "--appendonly", "no"]
+    restart: unless-stopped
     labels:
       - "com.neonlanes.track=${DEPLOY_TRACK:-production}"
       - "com.neonlanes.branch=${DEPLOY_BRANCH:-main}"
@@ -10,6 +11,7 @@ services:
 
   db:
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: neonlanes
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local}
@@ -31,6 +33,7 @@ services:
   api:
     build:
       context: ./apps/api
+    restart: on-failure
     env_file:
       - ./apps/api/.env
     environment:
@@ -62,6 +65,7 @@ services:
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
+    restart: unless-stopped
     environment:
       API_INTERNAL_URL: http://api:8000
     depends_on:
