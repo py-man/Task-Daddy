@@ -11,6 +11,7 @@ export default function SettingsIntegrationsPage() {
   const isAdmin = user?.role === "admin";
   const [statusItems, setStatusItems] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [testingKey, setTestingKey] = useState<string | null>(null);
 
   const live = useMemo(() => ([
     {
@@ -63,20 +64,68 @@ export default function SettingsIntegrationsPage() {
     },
   ]), []);
 
+  const refreshStatus = async () => {
+    setLoading(true);
+    try {
+      const out = await api.integrationStatus();
+      setStatusItems(out.items || []);
+    } catch (e: any) {
+      setStatusItems([]);
+      toast.error(String(e?.message || e || "Failed to load integration status"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const out = await api.integrationStatus();
-        setStatusItems(out.items || []);
-      } catch (e: any) {
-        setStatusItems([]);
-        toast.error(String(e?.message || e || "Failed to load integration status"));
-      } finally {
-        setLoading(false);
-      }
-    })();
+    refreshStatus();
   }, []);
+
+  const supportsQuickTest = (key: string) =>
+    ["jira", "openproject", "github", "smtp", "pushover", "slack", "teams"].includes(key);
+
+  const runQuickTest = async (key: string, title: string) => {
+    try {
+      setTestingKey(key);
+      if (key === "jira") {
+        const cs = await api.jiraConnections();
+        const c = (cs || []).find((x: any) => !x.needsReconnect) || cs?.[0];
+        if (!c) throw new Error("No Jira connection configured.");
+        if (c.needsReconnect) throw new Error("Jira connection needs reconnect. Re-save token first.");
+        await api.jiraTestConnection(c.id);
+      } else if (key === "openproject") {
+        const cs = await api.openprojectConnections();
+        const c = (cs || []).find((x: any) => x.enabled) || cs?.[0];
+        if (!c) throw new Error("No OpenProject connection configured.");
+        if (!c.enabled) throw new Error("OpenProject connection is disabled.");
+        await api.openprojectTestConnection(c.id);
+      } else if (key === "github") {
+        const cs = await api.githubConnections();
+        const c = (cs || []).find((x: any) => x.enabled) || cs?.[0];
+        if (!c) throw new Error("No GitHub connection configured.");
+        if (!c.enabled) throw new Error("GitHub connection is disabled.");
+        await api.githubTestConnection(c.id);
+      } else {
+        const provider = key;
+        const ds = await api.notificationDestinations();
+        const d = (ds || []).find((x: any) => x.provider === provider && x.enabled) || (ds || []).find((x: any) => x.provider === provider);
+        if (!d) throw new Error(`${title} is not configured.`);
+        if (!d.enabled) throw new Error(`${title} destination is disabled.`);
+        await api.notificationTestDestination(d.id, {
+          title: "Integration health check",
+          message: `${title} test from Settings > Integrations`,
+          priority: 0,
+        });
+      }
+      toast.success(`${title} test passed`);
+      await refreshStatus();
+    } catch (e: any) {
+      toast.error(String(e?.message || e || "Integration test failed"));
+      await refreshStatus();
+    } finally {
+      setTestingKey(null);
+    }
+  };
 
   const planned = [
     {
@@ -109,40 +158,55 @@ export default function SettingsIntegrationsPage() {
           <Link key={it.title} href={it.href} className="rounded-3xl border border-white/10 bg-white/5 hover:bg-white/7 transition p-4 block">
             <div className="flex items-center justify-between gap-2">
               <div className="text-sm font-semibold">{it.title}</div>
-              {(() => {
-                const s = (statusItems || []).find((x) => x.key === it.key);
-                const state = s?.state || "unknown";
-                const dot =
-                  state === "ok"
-                    ? "bg-emerald-400"
-                    : state === "error"
-                      ? "bg-rose-400"
-                      : state === "not_configured"
-                        ? "bg-slate-500"
-                        : "bg-amber-400";
-                const pill =
-                  state === "ok"
-                    ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
-                    : state === "error"
-                      ? "border-rose-400/30 bg-rose-400/10 text-rose-200"
-                      : state === "not_configured"
-                        ? "border-white/15 bg-white/5 text-muted"
-                        : "border-amber-400/30 bg-amber-400/10 text-amber-200";
-                const label =
-                  state === "ok"
-                    ? "Connected"
-                    : state === "error"
-                      ? "Error"
-                      : state === "not_configured"
-                        ? "Not configured"
-                        : "Needs test";
-                return (
-                  <span className={`inline-flex items-center gap-1.5 text-[11px] rounded-full border px-2 py-0.5 ${pill}`} title={s?.message || "No status yet"}>
-                    <span className={`inline-block h-2 w-2 rounded-full ${dot}`} />
-                    {label}
-                  </span>
-                );
-              })()}
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const s = (statusItems || []).find((x) => x.key === it.key);
+                  const state = s?.state || "unknown";
+                  const dot =
+                    state === "ok"
+                      ? "bg-emerald-400"
+                      : state === "error"
+                        ? "bg-rose-400"
+                        : state === "not_configured"
+                          ? "bg-slate-500"
+                          : "bg-amber-400";
+                  const pill =
+                    state === "ok"
+                      ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
+                      : state === "error"
+                        ? "border-rose-400/30 bg-rose-400/10 text-rose-200"
+                        : state === "not_configured"
+                          ? "border-white/15 bg-white/5 text-muted"
+                          : "border-amber-400/30 bg-amber-400/10 text-amber-200";
+                  const label =
+                    state === "ok"
+                      ? "Connected"
+                      : state === "error"
+                        ? "Error"
+                        : state === "not_configured"
+                          ? "Not configured"
+                          : "Needs test";
+                  return (
+                    <span className={`inline-flex items-center gap-1.5 text-[11px] rounded-full border px-2 py-0.5 ${pill}`} title={s?.message || "No status yet"}>
+                      <span className={`inline-block h-2 w-2 rounded-full ${dot}`} />
+                      {label}
+                    </span>
+                  );
+                })()}
+                {supportsQuickTest(it.key) && isAdmin ? (
+                  <button
+                    className="text-[11px] rounded-full border border-white/15 bg-white/5 px-2 py-0.5 hover:bg-white/10 transition"
+                    disabled={testingKey !== null}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      await runQuickTest(it.key, it.title);
+                    }}
+                  >
+                    {testingKey === it.key ? "Testing…" : "Test"}
+                  </button>
+                ) : null}
+              </div>
             </div>
             <div className="mt-1 text-xs text-muted">{it.desc}</div>
             {(() => {
