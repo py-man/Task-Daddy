@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timezone
 
 from sqlalchemy import select, update
@@ -75,8 +74,32 @@ async def dispatch_due_reminders_once(db: AsyncSession, *, now: datetime | None 
         external_messages.append(NotificationMessage(title=f"Task-Daddy reminder: {title}", message=body, priority=0))
       external_dests = await materialize_enabled_destinations(db) if external_messages else []
 
-      # Mark sent before external dispatch (external is best-effort).
-      await db.execute(update(TaskReminder).where(TaskReminder.id == r.id).values(status="sent", sent_at=now))
+      external_error: str | None = None
+      for msg in external_messages:
+        if not external_dests:
+          continue
+        results = await dispatch_to_materialized(external_dests, msg=msg)
+        failures = [x for x in results if str(x.get("status") or "").lower() == "error"]
+        if failures:
+          external_error = "; ".join([str((x.get("detail") or {}).get("error") or "delivery error") for x in failures])[:2000]
+          await write_audit(
+            db,
+            event_type="reminder.dispatch.error",
+            entity_type="TaskReminder",
+            entity_id=r.id,
+            board_id=(t.board_id if t else None),
+            task_id=r.task_id,
+            actor_id=None,
+            payload={"channels": list(r.channels or []), "failures": failures},
+          )
+          break
+
+      if external_error:
+        await db.execute(update(TaskReminder).where(TaskReminder.id == r.id).values(status="error", last_error=external_error))
+        await db.commit()
+        continue
+
+      await db.execute(update(TaskReminder).where(TaskReminder.id == r.id).values(status="sent", sent_at=now, last_error=None))
       await write_audit(
         db,
         event_type="reminder.sent",
@@ -89,14 +112,9 @@ async def dispatch_due_reminders_once(db: AsyncSession, *, now: datetime | None 
       )
       await db.commit()
 
-      for msg in external_messages:
-        if external_dests:
-          asyncio.create_task(dispatch_to_materialized(external_dests, msg=msg))
-
       sent += 1
     except Exception as e:
       await db.execute(update(TaskReminder).where(TaskReminder.id == r.id).values(status="error", last_error=str(e)))
       await db.commit()
 
   return sent
-

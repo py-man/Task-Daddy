@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import secrets
 from datetime import datetime, timezone
 
 import pytest
@@ -10,6 +11,7 @@ from sqlalchemy import func, select
 from app.db import SessionLocal
 from app.models import InAppNotification, NotificationDestination, TaskReminder
 from app.routers import tasks as tasks_router
+from app.reminders import service as reminder_service
 from app.reminders.service import dispatch_due_reminders_once
 from app.security import encrypt_secret
 
@@ -169,3 +171,63 @@ async def test_task_reminders_create_list_cancel_and_dispatch(client: AsyncClien
     assert notif is not None
     n = (await db.execute(select(func.count()).select_from(InAppNotification))).scalar_one()
     assert n >= 1
+
+
+@pytest.mark.anyio
+async def test_task_reminder_external_failure_sets_error_and_retries(client: AsyncClient, monkeypatch) -> None:
+  await login(client, "admin@neonlanes.local", "admin1234")
+
+  board_name = f"Reminder External Fail Board {secrets.token_hex(4)}"
+  b_res = await client.post("/boards", json={"name": board_name})
+  assert b_res.status_code == 200, b_res.text
+  b = b_res.json()
+  lanes_res = await client.get(f"/boards/{b['id']}/lanes")
+  assert lanes_res.status_code == 200, lanes_res.text
+  lane_id = lanes_res.json()[0]["id"]
+  t = (
+    await client.post(
+      f"/boards/{b['id']}/tasks",
+      json={"laneId": lane_id, "title": "Reminder external fail", "priority": "P2", "type": "Feature"},
+    )
+  ).json()
+
+  created = await client.post(
+    f"/tasks/{t['id']}/reminders",
+    json={"scheduledAt": "2026-02-22T10:00:00Z", "recipient": "me", "channels": ["inapp", "external"], "note": "retry me"},
+  )
+  assert created.status_code == 200, created.text
+  rid = created.json()["id"]
+
+  async def _fake_materialized(_db):
+    return [{"id": "dest-1", "provider": "smtp", "name": "smtp", "config": {}}]
+
+  async def _fake_dispatch(_dests, *, msg):
+    assert "reminder" in msg.title.lower()
+    return [{"provider": "smtp", "status": "error", "detail": {"error": "smtp failed"}}]
+
+  monkeypatch.setattr(reminder_service, "materialize_enabled_destinations", _fake_materialized)
+  monkeypatch.setattr(reminder_service, "dispatch_to_materialized", _fake_dispatch)
+
+  async with SessionLocal() as db:
+    now = datetime(2026, 2, 22, 12, 0, 0, tzinfo=timezone.utc)
+    sent = await dispatch_due_reminders_once(db, now=now)
+    assert sent == 0
+    r = await db.get(TaskReminder, rid)
+    assert r is not None
+    assert r.status == "error"
+    assert r.sent_at is None
+    assert "smtp failed" in str(r.last_error or "")
+
+  async def _fake_dispatch_ok(_dests, *, msg):
+    return [{"provider": "smtp", "status": "sent", "detail": {"ok": True}}]
+
+  monkeypatch.setattr(reminder_service, "dispatch_to_materialized", _fake_dispatch_ok)
+  async with SessionLocal() as db:
+    now = datetime(2026, 2, 22, 12, 1, 0, tzinfo=timezone.utc)
+    sent = await dispatch_due_reminders_once(db, now=now)
+    assert sent == 1
+    r = await db.get(TaskReminder, rid)
+    assert r is not None
+    assert r.status == "sent"
+    assert r.sent_at is not None
+    assert r.last_error in (None, "")
