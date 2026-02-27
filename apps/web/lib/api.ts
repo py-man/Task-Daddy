@@ -210,6 +210,16 @@ export const api = {
   async deletePriority(boardId: string, key: string) {
     return request<{ ok: boolean }>(`/boards/${boardId}/priorities/${encodeURIComponent(key)}`, { method: "DELETE" });
   },
+  async syncTaskFieldsToAllBoards(boardId: string) {
+    return request<{
+      ok: boolean;
+      boardsTouched: number;
+      typesCreated: number;
+      typesUpdated: number;
+      prioritiesCreated: number;
+      prioritiesUpdated: number;
+    }>(`/boards/${boardId}/task_fields/sync_all`, { method: "POST" });
+  },
   async taskReminders(taskId: string) {
     return request<TaskReminder[]>(`/tasks/${taskId}/reminders`);
   },
@@ -373,6 +383,9 @@ export const api = {
   },
   async jiraDeleteConnection(connectionId: string) {
     return request<{ ok: boolean }>(`/jira/connections/${connectionId}`, { method: "DELETE" });
+  },
+  async jiraTestConnection(connectionId: string) {
+    return request<{ ok: boolean; issuesSampled: number }>(`/jira/connections/${connectionId}/test`, { method: "POST", body: JSON.stringify({}) });
   },
   async openprojectConnections() {
     return request<any[]>("/openproject/connections");

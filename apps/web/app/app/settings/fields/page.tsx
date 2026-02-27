@@ -73,6 +73,28 @@ export default function SettingsFieldsPage() {
           <div className="mt-1 text-xs text-muted">Current board: {board.name}</div>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="primary"
+            className="h-9 px-4 shadow-[0_0_0_1px_rgba(115,255,209,0.35),0_8px_20px_rgba(16,185,129,0.28)]"
+            disabled={busy}
+            onClick={async () => {
+              if (!board?.id) return;
+              setBusy(true);
+              try {
+                const res = await api.syncTaskFieldsToAllBoards(board.id);
+                toast.success(
+                  `Synced fields: ${res.boardsTouched} board(s), +${res.typesCreated} type(s), +${res.prioritiesCreated} priority(s)`
+                );
+                await refreshAll();
+              } catch (e: any) {
+                toast.error(String(e?.message || e));
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            Save + Sync All Boards
+          </Button>
           <label className="text-xs text-muted flex items-center gap-2">
             <input type="checkbox" checked={applyAllBoards} onChange={(e) => setApplyAllBoards(e.target.checked)} />
             Add to all boards

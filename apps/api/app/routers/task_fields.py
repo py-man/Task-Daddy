@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit import write_audit
 from app.deps import get_current_user, get_db, require_board_role
-from app.models import BoardTaskPriority, BoardTaskType, Task, User
+from app.models import Board, BoardMember, BoardTaskPriority, BoardTaskType, Task, User
 from app.schemas import (
   BoardTaskPriorityCreateIn,
   BoardTaskPriorityOut,
@@ -27,6 +27,140 @@ router = APIRouter(tags=["taskFields"])
 
 def _norm_key(s: str) -> str:
   return (s or "").strip()
+
+
+@router.post("/boards/{board_id}/task_fields/sync_all")
+async def sync_task_fields_to_all_boards(
+  board_id: str, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+) -> dict:
+  # Require admin on source board to avoid accidental global changes.
+  await require_board_role(board_id, "admin", user, db)
+  await ensure_board_task_fields(db, board_id=board_id)
+
+  src_types = (
+    await db.execute(select(BoardTaskType).where(BoardTaskType.board_id == board_id).order_by(BoardTaskType.position.asc()))
+  ).scalars().all()
+  src_prios = (
+    await db.execute(select(BoardTaskPriority).where(BoardTaskPriority.board_id == board_id).order_by(BoardTaskPriority.rank.asc()))
+  ).scalars().all()
+
+  # Sync only to boards where caller is also admin.
+  target_board_ids = (
+    await db.execute(
+      select(Board.id)
+      .join(BoardMember, BoardMember.board_id == Board.id)
+      .where(BoardMember.user_id == user.id, BoardMember.role == "admin")
+    )
+  ).scalars().all()
+
+  boards_touched = 0
+  types_created = 0
+  types_updated = 0
+  prios_created = 0
+  prios_updated = 0
+
+  for target_id in target_board_ids:
+    if target_id == board_id:
+      continue
+    await ensure_board_task_fields(db, board_id=target_id)
+
+    existing_types = {
+      x.key: x
+      for x in (
+        await db.execute(select(BoardTaskType).where(BoardTaskType.board_id == target_id))
+      ).scalars().all()
+    }
+    existing_prios = {
+      x.key: x
+      for x in (
+        await db.execute(select(BoardTaskPriority).where(BoardTaskPriority.board_id == target_id))
+      ).scalars().all()
+    }
+
+    board_changed = False
+    for idx, src in enumerate(src_types):
+      dst = existing_types.get(src.key)
+      if dst is None:
+        max_pos = (
+          await db.execute(select(func.max(BoardTaskType.position)).where(BoardTaskType.board_id == target_id))
+        ).scalar_one()
+        pos = int(max_pos + 1) if max_pos is not None else idx
+        db.add(
+          BoardTaskType(
+            id=str(uuid.uuid4()),
+            board_id=target_id,
+            key=src.key,
+            name=src.name,
+            color=src.color,
+            enabled=bool(src.enabled),
+            position=pos,
+          )
+        )
+        types_created += 1
+        board_changed = True
+      else:
+        if dst.name != src.name or dst.color != src.color or bool(dst.enabled) != bool(src.enabled):
+          dst.name = src.name
+          dst.color = src.color
+          dst.enabled = bool(src.enabled)
+          types_updated += 1
+          board_changed = True
+
+    for idx, src in enumerate(src_prios):
+      dst = existing_prios.get(src.key)
+      if dst is None:
+        max_rank = (
+          await db.execute(select(func.max(BoardTaskPriority.rank)).where(BoardTaskPriority.board_id == target_id))
+        ).scalar_one()
+        rank = int(max_rank + 1) if max_rank is not None else idx
+        db.add(
+          BoardTaskPriority(
+            id=str(uuid.uuid4()),
+            board_id=target_id,
+            key=src.key,
+            name=src.name,
+            color=src.color,
+            enabled=bool(src.enabled),
+            rank=rank,
+          )
+        )
+        prios_created += 1
+        board_changed = True
+      else:
+        if dst.name != src.name or dst.color != src.color or bool(dst.enabled) != bool(src.enabled):
+          dst.name = src.name
+          dst.color = src.color
+          dst.enabled = bool(src.enabled)
+          prios_updated += 1
+          board_changed = True
+
+    if board_changed:
+      boards_touched += 1
+
+  await write_audit(
+    db,
+    event_type="board.task_fields.synced_all",
+    entity_type="Board",
+    entity_id=board_id,
+    board_id=board_id,
+    actor_id=user.id,
+    payload={
+      "boardsTouched": boards_touched,
+      "typesCreated": types_created,
+      "typesUpdated": types_updated,
+      "prioritiesCreated": prios_created,
+      "prioritiesUpdated": prios_updated,
+    },
+  )
+  await db.commit()
+  return {
+    "ok": True,
+    "boardsTouched": boards_touched,
+    "typesCreated": types_created,
+    "typesUpdated": types_updated,
+    "prioritiesCreated": prios_created,
+    "prioritiesUpdated": prios_updated,
+  }
 
 
 @router.get("/boards/{board_id}/task_types", response_model=list[BoardTaskTypeOut])
@@ -272,4 +406,3 @@ async def delete_priority(board_id: str, key: str, user: User = Depends(get_curr
   )
   await db.commit()
   return {"ok": True}
-
