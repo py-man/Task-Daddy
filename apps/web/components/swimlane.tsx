@@ -66,6 +66,8 @@ export function LaneColumn({
   tasks,
   users,
   onOpenTask,
+  selectedTaskIds = new Set<string>(),
+  onToggleTaskSelection = () => {},
   laneSortable = true,
   className
 }: {
@@ -73,6 +75,8 @@ export function LaneColumn({
   tasks: Task[];
   users: User[];
   onOpenTask: (taskId: string) => void;
+  selectedTaskIds?: Set<string>;
+  onToggleTaskSelection?: (taskId: string, selected: boolean) => void;
   laneSortable?: boolean;
   className?: string;
 }) {
@@ -125,8 +129,8 @@ export function LaneColumn({
       style={style}
       className={cn("w-[86vw] sm:w-[320px] h-full min-h-0 flex flex-col snap-start", isDragging && "opacity-70", className)}
     >
-      <div className="nl-lane-card glass rounded-2xl p-3 shadow-neon">
-        <div className="flex items-center gap-2">
+      <div className="nl-lane-card glass rounded-2xl p-3 shadow-neon min-h-[90px]">
+        <div className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-start gap-2">
           <div
             className="h-8 w-8 rounded-2xl border border-white/10 bg-white/5 grid place-items-center"
             {...(laneSortable ? attributes : {})}
@@ -135,28 +139,37 @@ export function LaneColumn({
           >
             <GripVertical size={16} className="text-muted" />
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
+          <div className="min-w-0 space-y-1">
+            <div className="h-5 flex items-center gap-2 min-w-0">
               {laneIcon(lane.type)}
-              <div className="nl-lane-title font-semibold text-sm">{lane.name}</div>
+              <div className="nl-lane-title font-semibold text-sm truncate">{lane.name}</div>
               {overWip ? <AlertTriangle size={14} className="text-warn" /> : null}
-              {overdueCount ? <Badge variant="danger">Overdue {overdueCount}</Badge> : null}
             </div>
-            <div className="nl-lane-meta text-xs text-muted">
-              {count} tasks{wip !== null ? ` • WIP ${count}/${wip}` : ""} • {lane.stateKey}
+            <div className="h-5 flex items-center gap-2 min-w-0">
+              <div className="nl-lane-meta text-xs text-muted truncate whitespace-nowrap">
+                {count} tasks{wip !== null ? ` • WIP ${count}/${wip}` : ""} • {lane.stateKey}
+              </div>
             </div>
           </div>
-          <Badge variant={lane.type === "done" ? "ok" : lane.type === "blocked" ? "danger" : "muted"}>{lane.type}</Badge>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className="h-9 w-9 rounded-2xl border border-white/10 bg-white/0 hover:bg-white/5 transition grid place-items-center"
-                onClick={(e) => e.stopPropagation()}
-                title="Lane settings"
-              >
-                <span className="text-muted">•••</span>
-              </button>
-            </PopoverTrigger>
+          <div className="flex flex-col items-end gap-1 shrink-0 pt-[1px]">
+            <Badge variant={lane.type === "done" ? "ok" : lane.type === "blocked" ? "danger" : "muted"} className="shrink-0 uppercase">
+              {lane.type}
+            </Badge>
+            {overdueCount ? (
+              <Badge variant="danger" className="shrink-0">
+                OVERDUE {overdueCount}
+              </Badge>
+            ) : null}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className="h-9 w-9 shrink-0 rounded-2xl border border-white/10 bg-white/0 hover:bg-white/5 transition grid place-items-center"
+                  onClick={(e) => e.stopPropagation()}
+                  title="Lane settings"
+                >
+                  <span className="text-muted text-base leading-none">•••</span>
+                </button>
+              </PopoverTrigger>
             <PopoverContent
               onOpenAutoFocus={(e) => e.preventDefault()}
               onClick={(e) => e.stopPropagation()}
@@ -274,7 +287,8 @@ export function LaneColumn({
                 </div>
               </div>
             </PopoverContent>
-          </Popover>
+            </Popover>
+          </div>
         </div>
       </div>
 
@@ -288,7 +302,15 @@ export function LaneColumn({
         <SortableContext items={tasks.map((t) => `task:${t.id}`)} strategy={verticalListSortingStrategy}>
           <div className="nl-task-stack flex flex-col gap-2">
             {tasks.map((t) => (
-              <TaskCard key={t.id} task={t} laneType={lane.type} users={users} onOpen={() => onOpenTask(t.id)} />
+              <TaskCard
+                key={t.id}
+                task={t}
+                laneType={lane.type}
+                users={users}
+                selected={selectedTaskIds.has(t.id)}
+                onSelect={(selected) => onToggleTaskSelection(t.id, selected)}
+                onOpen={() => onOpenTask(t.id)}
+              />
             ))}
           </div>
         </SortableContext>
@@ -307,7 +329,21 @@ export function LaneColumn({
   );
 }
 
-function TaskCard({ task, laneType, users, onOpen }: { task: Task; laneType: string; users: User[]; onOpen: () => void }) {
+function TaskCard({
+  task,
+  laneType,
+  users,
+  selected,
+  onSelect,
+  onOpen
+}: {
+  task: Task;
+  laneType: string;
+  users: User[];
+  selected: boolean;
+  onSelect: (selected: boolean) => void;
+  onOpen: () => void;
+}) {
   const { priorities } = useBoard();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: `task:${task.id}` });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -351,6 +387,17 @@ function TaskCard({ task, laneType, users, onOpen }: { task: Task; laneType: str
       }}
       whileTap={{ scale: 0.985, y: 0 }}
     >
+      <div className="absolute right-2 top-2 z-10">
+        <input
+          type="checkbox"
+          className="h-4 w-4 accent-emerald-400"
+          checked={selected}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onChange={(e) => onSelect(e.target.checked)}
+          aria-label={`Select task ${task.title}`}
+        />
+      </div>
       <div
         className={cn(
           "absolute -left-0.5 top-3 bottom-3 w-0.5 rounded-full",
@@ -361,7 +408,7 @@ function TaskCard({ task, laneType, users, onOpen }: { task: Task; laneType: str
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <div className="nl-task-title text-sm font-medium truncate">{task.title}</div>
-          <div className="mt-1 flex flex-wrap gap-1.5 items-center">
+          <div className="mt-1 flex flex-wrap gap-1.5 items-center content-center">
             <Badge variant={priorityVariant(task.priority)}>{task.priority}</Badge>
             {task.blocked ? <Badge variant="danger">Blocked</Badge> : null}
             {showDue ? <Badge variant={overdue ? "danger" : dueSoon ? "warn" : "muted"}>{due.label}</Badge> : null}
@@ -376,7 +423,9 @@ function TaskCard({ task, laneType, users, onOpen }: { task: Task; laneType: str
                 onPointerDown={(e) => e.stopPropagation()}
                 className="inline-flex"
               >
-                <Badge variant="accent">{task.jiraKey}</Badge>
+                <Badge variant="accent" className="max-w-[120px] truncate">
+                  {task.jiraKey}
+                </Badge>
               </a>
             ) : null}
           </div>

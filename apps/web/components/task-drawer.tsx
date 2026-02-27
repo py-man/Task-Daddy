@@ -38,6 +38,7 @@ function localDateTimeToIsoOrNull(v: string) {
   const h = Number(m[4]);
   const mi = Number(m[5]);
   const dt = new Date(y, mo - 1, d, h, mi, 0, 0);
+  // Guard invalid rollovers (e.g., 2026-02-31T10:00).
   if (
     Number.isNaN(dt.getTime()) ||
     dt.getFullYear() !== y ||
@@ -117,7 +118,7 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
     assigneeMode: "projectDefault" | "taskOwner" | "unassigned" | "connectionDefault";
   }>({
     connectionId: "",
-    projectKey: "DEMO",
+    projectKey: "INFRA",
     issueType: "Task",
     enableSync: true,
     assigneeMode: "connectionDefault"
@@ -160,7 +161,7 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
     if (r === 2) return "accent";
     return "muted";
   };
-  const jiraProjects = ["DEMO", "OPS", "APP", "WEB", "API", "DOCS"];
+  const jiraProjects = ["INFRA", "PSS", "CRQ", "PROBMAN", "OPS_GOV", "OG"];
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -224,7 +225,7 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
     } else {
       setForm(null);
     }
-  }, [taskId, task]);
+  }, [taskId]); // intentionally not depending on task snapshot
 
   useEffect(() => {
     if (isMobileViewport && tab === "copilot") {
@@ -551,6 +552,7 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
 
   const runAI = async (action: string) => {
     if (!taskId) return;
+    if (!isMobileViewport) setTab("copilot");
     setAiLoading(true);
     setAiAction(action);
     setAiStructured(null);
@@ -567,6 +569,7 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
 
   const enhanceTicket = async () => {
     if (!taskId) return;
+    if (!isMobileViewport) setTab("copilot");
     setAiLoading(true);
     setAiAction("enhance");
     try {
@@ -689,14 +692,20 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {isMobileViewport && tab === "details" && form ? (
-                      <Button variant="primary" size="sm" onClick={save} disabled={saving}>
-                        {saving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />} Save
-                      </Button>
-                    ) : null}
                     <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close">
                       <X size={16} />
                     </Button>
+                    {tab === "details" && form ? (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="border-emerald-400/60 bg-[linear-gradient(180deg,rgba(52,211,153,0.26),rgba(16,185,129,0.14))] text-emerald-50 hover:bg-[linear-gradient(180deg,rgba(52,211,153,0.34),rgba(16,185,129,0.18))]"
+                        onClick={save}
+                        disabled={saving}
+                      >
+                        {saving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />} Save
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
 
@@ -743,60 +752,67 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
                             ) : null}
                             <div className="col-span-2 rounded-2xl border border-white/10 bg-white/5 p-2">
                               <div className="text-xs text-muted mb-2">Quick actions</div>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <Button size="sm" variant="primary" onClick={save} disabled={saving}>
-                                  {saving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />} Save
-                                </Button>
-                                {!isMobileViewport ? (
+                              <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2 min-w-0">
+                                  {!isMobileViewport ? (
                                   <Button size="sm" variant="ghost" onClick={enhanceTicket} disabled={aiLoading || saving || !taskId}>
                                     Enhance
                                   </Button>
-                                ) : null}
-                                {task?.jiraKey ? (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    disabled={saving}
-                                    onClick={async () => {
-                                      if (!taskId) return;
-                                      try {
-                                        setSaving(true);
-                                        await api.taskJiraSync(taskId);
-                                        await refreshAll();
-                                        toast.success("Jira synced");
-                                      } catch (e: any) {
-                                        toast.error(String(e?.message || e));
-                                      } finally {
-                                        setSaving(false);
-                                      }
-                                    }}
-                                  >
-                                    Sync Jira
-                                  </Button>
-                                ) : null}
-                                {task?.openprojectWorkPackageId ? (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    disabled={saving}
-                                    onClick={async () => {
-                                      if (!taskId) return;
-                                      try {
-                                        setSaving(true);
-                                        await api.taskOpenProjectSync(taskId);
-                                        await refreshAll();
-                                        toast.success("OpenProject synced");
-                                      } catch (e: any) {
-                                        toast.error(String(e?.message || e));
-                                      } finally {
-                                        setSaving(false);
-                                      }
-                                    }}
-                                  >
-                                    Sync OpenProject
-                                  </Button>
-                                ) : null}
+                                  ) : null}
+                                  {task?.jiraKey ? (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      disabled={saving}
+                                      onClick={async () => {
+                                        if (!taskId) return;
+                                        try {
+                                          setSaving(true);
+                                          await api.taskJiraSync(taskId);
+                                          await refreshAll();
+                                          toast.success("Jira synced");
+                                        } catch (e: any) {
+                                          toast.error(String(e?.message || e));
+                                        } finally {
+                                          setSaving(false);
+                                        }
+                                      }}
+                                    >
+                                      Sync Jira
+                                    </Button>
+                                  ) : null}
+                                  {task?.openprojectWorkPackageId ? (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      disabled={saving}
+                                      onClick={async () => {
+                                        if (!taskId) return;
+                                        try {
+                                          setSaving(true);
+                                          await api.taskOpenProjectSync(taskId);
+                                          await refreshAll();
+                                          toast.success("OpenProject synced");
+                                        } catch (e: any) {
+                                          toast.error(String(e?.message || e));
+                                        } finally {
+                                          setSaving(false);
+                                        }
+                                      }}
+                                    >
+                                      Sync OpenProject
+                                    </Button>
+                                  ) : null}
+                                </div>
                               </div>
+                              {!isMobileViewport && aiText ? (
+                                <div className="mt-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-xs flex items-center justify-between gap-2">
+                                  <span>AI preview ready.</span>
+                                  <Button size="sm" variant="ghost" onClick={() => setTab("copilot")}>
+                                    Open Copilot
+                                  </Button>
+                                </div>
+                              ) : null}
                             </div>
                             <div className="col-span-2">
                               <div className="text-xs text-muted mb-1 flex items-center gap-1">
@@ -1129,12 +1145,6 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
                                 </Button>
                               </div>
                             </div>
-                          </div>
-
-                          <div className="flex justify-end">
-                            <Button onClick={save} disabled={saving}>
-                              {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Save
-                            </Button>
                           </div>
 
                           <details className="rounded-2xl border border-white/10 bg-white/5 p-3" open={isMobileViewport || (!isFocusLayout && !isCompactLayout)}>
@@ -1667,7 +1677,7 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
                         <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
                           <div className="text-sm font-semibold">Create Jira from this task</div>
                           <div className="text-xs text-muted mt-1">
-                            Manual + idempotent. Once linked, this task won’t create duplicates. Use “Sync this Jira (pull)” to bring updates into Task-Daddy.
+                            Manual + idempotent. Once linked, this task won’t create duplicates. Use “Sync this Jira (pull)” to bring updates into NeonLanes.
                           </div>
 
                           <div className="mt-3 space-y-2">
