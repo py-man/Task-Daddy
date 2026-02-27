@@ -35,7 +35,12 @@ if git grep -nE "$secret_pattern" -- . ':(exclude)*.md' >/tmp/taskdaddy_secret_h
 fi
 
 # 3) Block known private identifiers from this project context.
-identifier_pattern='kevin\.brannigan|technosludge|heli-pay|gpecom|globalpay|globalpayments'
+# Generic identifier guard only; keep project-specific private identifiers
+# in local, untracked overlays (for example via EXTRA_IDENTIFIER_PATTERN).
+identifier_pattern='acme-internal|internal-only-domain|private-customer-name'
+if [[ -n "${EXTRA_IDENTIFIER_PATTERN:-}" ]]; then
+  identifier_pattern="${identifier_pattern}|${EXTRA_IDENTIFIER_PATTERN}"
+fi
 if git grep -nEi "$identifier_pattern" -- . ':(exclude)docs/*' ':(exclude)README.md' >/tmp/taskdaddy_identifier_hits.txt; then
   grep -v 'scripts/pre_push_security_gate.sh:' /tmp/taskdaddy_identifier_hits.txt > /tmp/taskdaddy_identifier_hits_filtered.txt || true
   if ! [ -s /tmp/taskdaddy_identifier_hits_filtered.txt ]; then
