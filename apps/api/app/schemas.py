@@ -620,6 +620,51 @@ class OpenProjectConnectionOut(BaseModel):
   updatedAt: datetime
 
 
+class GitHubConnectIn(BaseModel):
+  name: str | None = Field(default=None, min_length=1, max_length=80)
+  baseUrl: str = Field(default="https://api.github.com", max_length=200)
+  apiToken: str = Field(min_length=6, max_length=400)
+  defaultOwner: str | None = Field(default=None, max_length=120)
+  defaultRepo: str | None = Field(default=None, max_length=120)
+  enabled: bool = True
+
+
+class GitHubConnectionUpdateIn(BaseModel):
+  name: str | None = Field(default=None, min_length=1, max_length=80)
+  apiToken: str | None = Field(default=None, min_length=6, max_length=400)
+  defaultOwner: str | None = Field(default=None, max_length=120)
+  defaultRepo: str | None = Field(default=None, max_length=120)
+  enabled: bool | None = None
+
+
+class GitHubConnectionOut(BaseModel):
+  id: str
+  name: str
+  baseUrl: str
+  defaultOwner: str | None = None
+  defaultRepo: str | None = None
+  enabled: bool = True
+  tokenHint: str = ""
+  createdAt: datetime
+  updatedAt: datetime
+
+
+class IntegrationStatusItemOut(BaseModel):
+  key: str
+  label: str
+  configured: bool
+  enabled: bool
+  state: Literal["ok", "error", "unknown", "not_configured"]
+  message: str | None = None
+  lastCheckedAt: datetime | None = None
+  updatedAt: datetime | None = None
+
+
+class IntegrationsStatusOut(BaseModel):
+  generatedAt: datetime
+  items: list[IntegrationStatusItemOut]
+
+
 class WebhookSecretOut(BaseModel):
   source: str
   enabled: bool

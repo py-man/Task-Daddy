@@ -30,6 +30,7 @@ from app.models import (
   ApiToken,
   MfaTrustedDevice,
   BackupPolicy,
+  GitHubConnection,
   JiraConnection,
   OpenProjectConnection,
   JiraSyncProfile,
@@ -71,6 +72,7 @@ async def _reset_db() -> None:
     await db.execute(delete(BoardTaskPriority))
     await db.execute(delete(Board))
     await db.execute(delete(JiraConnection))
+    await db.execute(delete(GitHubConnection))
     await db.execute(delete(OpenProjectConnection))
     await db.execute(delete(InboundWebhookEvent))
     await db.execute(delete(WebhookSecret))

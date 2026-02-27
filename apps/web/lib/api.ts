@@ -399,6 +399,36 @@ export const api = {
   async openprojectTestConnection(connectionId: string) {
     return request<{ ok: boolean; result: any }>(`/openproject/connections/${connectionId}/test`, { method: "POST", body: JSON.stringify({}) });
   },
+  async githubConnections() {
+    return request<any[]>("/github/connections");
+  },
+  async githubConnect(payload: { name?: string | null; baseUrl?: string | null; apiToken: string; defaultOwner?: string | null; defaultRepo?: string | null; enabled?: boolean }) {
+    return request<any>("/github/connections", { method: "POST", body: JSON.stringify(payload) });
+  },
+  async githubUpdateConnection(connectionId: string, payload: { name?: string | null; apiToken?: string | null; defaultOwner?: string | null; defaultRepo?: string | null; enabled?: boolean | null }) {
+    return request<any>(`/github/connections/${connectionId}`, { method: "PATCH", body: JSON.stringify(payload) });
+  },
+  async githubDeleteConnection(connectionId: string) {
+    return request<{ ok: boolean }>(`/github/connections/${connectionId}`, { method: "DELETE" });
+  },
+  async githubTestConnection(connectionId: string) {
+    return request<{ ok: boolean; result: any }>(`/github/connections/${connectionId}/test`, { method: "POST", body: JSON.stringify({}) });
+  },
+  async integrationStatus() {
+    return request<{
+      generatedAt: string;
+      items: Array<{
+        key: string;
+        label: string;
+        configured: boolean;
+        enabled: boolean;
+        state: "ok" | "error" | "unknown" | "not_configured";
+        message?: string | null;
+        lastCheckedAt?: string | null;
+        updatedAt?: string | null;
+      }>;
+    }>("/integrations/status");
+  },
   async jiraClearSyncRuns(boardId: string) {
     return request<{ ok: boolean }>(`/jira/sync-runs?${new URLSearchParams({ boardId })}`, { method: "DELETE" });
   },

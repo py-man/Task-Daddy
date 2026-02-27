@@ -18,6 +18,8 @@ from app.routers.audit import router as audit_router
 from app.routers.auth import router as auth_router
 from app.routers.boards import router as boards_router
 from app.routers.backups import router as backups_router
+from app.routers.github import router as github_router
+from app.routers.integrations import router as integrations_router
 from app.routers.jira import router as jira_router
 from app.routers.lanes import router as lanes_router
 from app.routers.notifications import router as notifications_router
@@ -73,6 +75,8 @@ app.include_router(task_fields_router)
 app.include_router(audit_router)
 app.include_router(ai_router)
 app.include_router(jira_router)
+app.include_router(github_router)
+app.include_router(integrations_router)
 app.include_router(backups_router)
 app.include_router(users_router)
 app.include_router(webhooks_router)

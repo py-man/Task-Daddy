@@ -296,6 +296,21 @@ class OpenProjectConnection(Base):
   updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
 
 
+class GitHubConnection(Base):
+  __tablename__ = "github_connections"
+
+  id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4()))
+  name: Mapped[str] = mapped_column(String, nullable=False, default="GitHub")
+  base_url: Mapped[str] = mapped_column(String, nullable=False, default="https://api.github.com")
+  api_token_encrypted: Mapped[str] = mapped_column(Text, nullable=False)
+  default_owner: Mapped[str | None] = mapped_column(String, nullable=True)
+  default_repo: Mapped[str | None] = mapped_column(String, nullable=True)
+  enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+  token_hint: Mapped[str] = mapped_column(String, nullable=False, default="")
+  created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+  updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+
+
 class JiraSyncProfile(Base):
   __tablename__ = "jira_sync_profiles"
 

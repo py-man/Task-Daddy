@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, CalendarDays, Home, LayoutGrid, List, Plug, Settings, Webhook } from "lucide-react";
+import { BookOpen, CalendarDays, Github, Home, LayoutGrid, List, Plug, Settings, Webhook } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TaskDaddyLogo } from "@/components/brand/task-daddy-logo";
@@ -13,6 +13,7 @@ const items = [
   { href: "/app/list", icon: List, label: "List" },
   { href: "/app/calendar", icon: CalendarDays, label: "Calendar" },
   { href: "/app/integrations/jira", icon: Plug, label: "Jira" },
+  { href: "/app/integrations/github", icon: Github, label: "GitHub" },
   { href: "/app/integrations/webhooks", icon: Webhook, label: "Webhooks" },
   { href: "/app/help", icon: BookOpen, label: "Help" }
 ] as const;
