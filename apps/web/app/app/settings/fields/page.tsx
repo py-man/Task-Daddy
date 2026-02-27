@@ -21,11 +21,12 @@ function toKey(name: string) {
 }
 
 export default function SettingsFieldsPage() {
-  const { board, taskTypes, priorities, refreshAll, loading } = useBoard();
+  const { board, boards, taskTypes, priorities, refreshAll, loading } = useBoard();
   const [typeName, setTypeName] = useState("");
   const [typeKey, setTypeKey] = useState("");
   const [prioName, setPrioName] = useState("");
   const [prioKey, setPrioKey] = useState("");
+  const [applyAllBoards, setApplyAllBoards] = useState(true);
   const [busy, setBusy] = useState(false);
 
   const enabledTaskTypes = useMemo(
@@ -69,8 +70,15 @@ export default function SettingsFieldsPage() {
         <div>
           <div className="text-lg font-semibold">Fields</div>
           <div className="mt-2 text-sm text-muted">Customize task types and priorities per board. Keys are what tasks store; names can change later.</div>
+          <div className="mt-1 text-xs text-muted">Current board: {board.name}</div>
         </div>
-        <Badge variant="muted">Per-board</Badge>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted flex items-center gap-2">
+            <input type="checkbox" checked={applyAllBoards} onChange={(e) => setApplyAllBoards(e.target.checked)} />
+            Add to all boards
+          </label>
+          <Badge variant="muted">{applyAllBoards ? "All boards" : "Current board"}</Badge>
+        </div>
       </div>
 
       <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -102,8 +110,18 @@ export default function SettingsFieldsPage() {
                   if (!board?.id) return;
                   setBusy(true);
                   try {
-                    await api.createTaskType(board.id, { key: typeKey.trim(), name: typeName.trim() });
-                    toast.success("Created");
+                    const targetBoards = applyAllBoards ? boards.map((b) => b.id) : [board.id];
+                    let created = 0;
+                    for (const bid of targetBoards) {
+                      try {
+                        await api.createTaskType(bid, { key: typeKey.trim(), name: typeName.trim() });
+                        created++;
+                      } catch (e: any) {
+                        const msg = String(e?.message || e);
+                        if (!msg.includes("409")) throw e;
+                      }
+                    }
+                    toast.success(created > 0 ? `Created on ${created} board${created === 1 ? "" : "s"}` : "Already exists on selected boards");
                     setTypeName("");
                     setTypeKey("");
                     await refreshAll();
@@ -202,8 +220,18 @@ export default function SettingsFieldsPage() {
                   if (!board?.id) return;
                   setBusy(true);
                   try {
-                    await api.createPriority(board.id, { key: prioKey.trim(), name: prioName.trim() });
-                    toast.success("Created");
+                    const targetBoards = applyAllBoards ? boards.map((b) => b.id) : [board.id];
+                    let created = 0;
+                    for (const bid of targetBoards) {
+                      try {
+                        await api.createPriority(bid, { key: prioKey.trim(), name: prioName.trim() });
+                        created++;
+                      } catch (e: any) {
+                        const msg = String(e?.message || e);
+                        if (!msg.includes("409")) throw e;
+                      }
+                    }
+                    toast.success(created > 0 ? `Created on ${created} board${created === 1 ? "" : "s"}` : "Already exists on selected boards");
                     setPrioName("");
                     setPrioKey("");
                     await refreshAll();
@@ -279,4 +307,3 @@ export default function SettingsFieldsPage() {
     </div>
   );
 }
-
