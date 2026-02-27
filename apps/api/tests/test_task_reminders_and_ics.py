@@ -174,6 +174,28 @@ async def test_task_reminders_create_list_cancel_and_dispatch(client: AsyncClien
 
 
 @pytest.mark.anyio
+async def test_task_reminder_rejects_naive_datetime(client: AsyncClient) -> None:
+  await login(client, "admin@neonlanes.local", "admin1234")
+
+  b = (await client.post("/boards", json={"name": "Reminder TZ Validation Board"})).json()
+  lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
+  lane_id = lanes[0]["id"]
+  t = (
+    await client.post(
+      f"/boards/{b['id']}/tasks",
+      json={"laneId": lane_id, "title": "Reminder naive datetime", "priority": "P2", "type": "Feature"},
+    )
+  ).json()
+
+  created = await client.post(
+    f"/tasks/{t['id']}/reminders",
+    json={"scheduledAt": "2026-02-22T10:00:00", "recipient": "me", "channels": ["inapp"], "note": "naive"},
+  )
+  assert created.status_code == 422, created.text
+  assert "timezone" in created.text.lower()
+
+
+@pytest.mark.anyio
 async def test_task_reminder_external_failure_sets_error_and_retries(client: AsyncClient, monkeypatch) -> None:
   await login(client, "admin@neonlanes.local", "admin1234")
 

@@ -9,6 +9,7 @@ from pydantic import field_validator
 
 
 _DATE_ONLY_RE = re.compile(r"^\\d{4}-\\d{2}-\\d{2}$")
+_TZ_SUFFIX_RE = re.compile(r"(Z|[+-]\\d{2}:\\d{2})$")
 
 
 def _parse_dt_utc(value: object) -> object:
@@ -30,6 +31,29 @@ def _parse_dt_utc(value: object) -> object:
   if dt.tzinfo is None:
     return dt.replace(tzinfo=timezone.utc)
   return dt.astimezone(timezone.utc)
+
+
+def _parse_dt_utc_require_tz(value: object) -> object:
+  if value is None:
+    return None
+  if isinstance(value, datetime):
+    dt = value
+    if dt.tzinfo is None:
+      raise ValueError("datetime must include timezone")
+    return dt.astimezone(timezone.utc)
+  if isinstance(value, str):
+    s = value.strip()
+    if not s:
+      return None
+    if _DATE_ONLY_RE.fullmatch(s):
+      raise ValueError("datetime must include time and timezone")
+    if not _TZ_SUFFIX_RE.search(s):
+      raise ValueError("datetime must include timezone")
+    dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+    if dt.tzinfo is None:
+      raise ValueError("datetime must include timezone")
+    return dt.astimezone(timezone.utc)
+  return value
 
 
 class UserOut(BaseModel):
@@ -369,7 +393,7 @@ class TaskReminderCreateIn(BaseModel):
   @field_validator("scheduledAt", mode="before")
   @classmethod
   def _scheduled_to_utc(cls, v: object) -> object:
-    return _parse_dt_utc(v)
+    return _parse_dt_utc_require_tz(v)
 
   @field_validator("channels")
   @classmethod
