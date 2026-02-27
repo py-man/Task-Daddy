@@ -16,10 +16,10 @@ export default function JiraPage() {
   const [connections, setConnections] = useState<any[] | null>(null);
   const [profiles, setProfiles] = useState<any[] | null>(null);
   const [runs, setRuns] = useState<any[] | null>(null);
-  const [connectForm, setConnectForm] = useState({ name: "Primary Jira", baseUrl: "", email: "", token: "", defaultAssigneeAccountId: "" });
+  const [connectForm, setConnectForm] = useState({ name: "Primary", baseUrl: "", email: "", token: "", defaultAssigneeAccountId: "" });
   const [importForm, setImportForm] = useState({
     connectionId: "",
-    jql: "project = DEMO ORDER BY updated DESC",
+    jql: "ORDER BY updated DESC",
     statusToStateKey: `{\n  "To Do": "backlog",\n  "In Progress": "in_progress",\n  "Done": "done"\n}`,
     priorityMap: `{\n  "Highest": "P0",\n  "High": "P1",\n  "Medium": "P2",\n  "Low": "P3"\n}`,
     typeMap: `{\n  "Bug": "Bug",\n  "Task": "Feature",\n  "Story": "Feature"\n}`,
@@ -27,9 +27,14 @@ export default function JiraPage() {
   });
   const [importing, setImporting] = useState(false);
   const [syncingNow, setSyncingNow] = useState(false);
+  const [loadError, setLoadError] = useState<string>("");
+  const [showJiraToken, setShowJiraToken] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [jiraTestStatus, setJiraTestStatus] = useState<"unknown" | "ok" | "error">("unknown");
 
   const refresh = async () => {
     try {
+      setLoadError("");
       const [cs, ps, rs] = await Promise.all([
         api.jiraConnections(),
         board?.id ? api.jiraProfiles(board.id) : Promise.resolve([]),
@@ -43,7 +48,9 @@ export default function JiraPage() {
         if (preferred) setImportForm((f) => ({ ...f, connectionId: preferred.id }));
       }
     } catch (e: any) {
-      toast.error(String(e?.message || e));
+      const msg = String(e?.message || e);
+      setLoadError(msg);
+      toast.error(msg);
     }
   };
 
@@ -59,6 +66,9 @@ export default function JiraPage() {
     () => (connections || []).find((c: any) => c.id === importForm.connectionId) || null,
     [connections, importForm.connectionId]
   );
+  const connectionOk = Boolean(selectedConnection && !selectedConnection.needsReconnect);
+  const profileOk = Boolean((profiles || []).length);
+  const syncOk = lastRun ? lastRun.status === "success" : false;
   const firstProfile = (profiles || [])[0] || null;
   const firstProfileConnection = useMemo(
     () => (connections || []).find((c: any) => c.id === firstProfile?.connectionId) || null,
@@ -71,6 +81,9 @@ export default function JiraPage() {
     <div className="h-full overflow-hidden flex flex-col">
       <div className="px-4 pb-3 flex items-center gap-2">
         <div className="text-sm font-semibold">Jira</div>
+        <span className={`inline-block h-2.5 w-2.5 rounded-full ${connectionOk ? "bg-emerald-400" : "bg-red-400"}`} title="Connection status" />
+        <span className={`inline-block h-2.5 w-2.5 rounded-full ${profileOk ? "bg-emerald-400" : "bg-amber-400"}`} title="Import profile status" />
+        <span className={`inline-block h-2.5 w-2.5 rounded-full ${syncOk ? "bg-emerald-400" : "bg-red-400"}`} title="Last sync status" />
         {lastRun ? (
           <Badge variant={lastRun.status === "success" ? "ok" : "danger"}>
             Last: {lastRun.status} • {new Date(lastRun.startedAt).toLocaleString()}
@@ -78,11 +91,14 @@ export default function JiraPage() {
         ) : (
           <Badge variant="muted">No sync runs</Badge>
         )}
+        {jiraTestStatus === "ok" ? <Badge variant="ok">Jira test: green</Badge> : null}
+        {jiraTestStatus === "error" ? <Badge variant="danger">Jira test: failed</Badge> : null}
         <div className="flex-1" />
         <Button variant="ghost" onClick={refresh}>
           Refresh
         </Button>
       </div>
+      {loadError ? <div className="px-4 pb-2 text-xs text-danger">Load error: {loadError}</div> : null}
 
       <div className="flex-1 overflow-auto px-4 pb-6 scrollbar">
         <div className="grid grid-cols-2 gap-4">
@@ -93,7 +109,7 @@ export default function JiraPage() {
 
             <div className="mt-4 space-y-2">
               <div className="text-xs text-muted">Name</div>
-              <Input value={connectForm.name} onChange={(e) => setConnectForm({ ...connectForm, name: e.target.value })} placeholder="e.g. Primary Jira" />
+              <Input value={connectForm.name} onChange={(e) => setConnectForm({ ...connectForm, name: e.target.value })} placeholder="e.g. Primary" />
               <div className="text-xs text-muted">Base URL</div>
               <Input
                 data-testid="jira-base-url"
@@ -127,11 +143,15 @@ export default function JiraPage() {
               <div className="text-xs text-muted">API token / PAT</div>
               <Input
                 data-testid="jira-token"
-                type="password"
+                type={showJiraToken ? "text" : "password"}
                 value={connectForm.token}
                 onChange={(e) => setConnectForm({ ...connectForm, token: e.target.value })}
                 placeholder="••••••••"
               />
+              <label className="flex items-center gap-2 text-xs text-muted">
+                <input type="checkbox" checked={showJiraToken} onChange={(e) => setShowJiraToken(e.target.checked)} />
+                <span>Show token</span>
+              </label>
               <div className="text-xs text-muted">Default assignee accountId (optional)</div>
               <Input
                 data-testid="jira-default-assignee"
@@ -153,7 +173,7 @@ export default function JiraPage() {
                       defaultAssigneeAccountId: connectForm.defaultAssigneeAccountId.trim() || null
                     });
                     toast.success("Connected");
-                    setConnectForm({ name: "Primary Jira", baseUrl: "", email: "", token: "", defaultAssigneeAccountId: "" });
+                    setConnectForm({ name: "Primary", baseUrl: "", email: "", token: "", defaultAssigneeAccountId: "" });
                     await refresh();
                   } catch (e: any) {
                     toast.error(String(e?.message || e));
@@ -238,8 +258,8 @@ export default function JiraPage() {
           </div>
 
           <div className="glass rounded-3xl shadow-neon border border-white/10 p-4">
-            <div className="text-sm font-semibold">Import / Sync</div>
-            <div className="text-xs text-muted mt-1">Import issues by JQL into this board, mapping Jira status → lane `stateKey`.</div>
+            <div className="text-sm font-semibold">Connection health</div>
+            <div className="text-xs text-muted mt-1">Primary flow: connect Jira, then test the connection.</div>
 
             <div className="mt-4 space-y-2">
               <div className="text-xs text-muted">Connection</div>
@@ -261,144 +281,199 @@ export default function JiraPage() {
                 <div className="text-xs text-danger">Selected connection needs reconnect. Re-save token in Connect first.</div>
               ) : null}
 
-              <div className="text-xs text-muted">JQL</div>
-              <Input value={importForm.jql} onChange={(e) => setImportForm({ ...importForm, jql: e.target.value })} />
-
-              <div className="text-xs text-muted">statusToStateKey (JSON)</div>
-              <textarea
-                className="min-h-24 w-full rounded-2xl bg-white/5 border border-white/10 p-3 text-sm text-text outline-none focus:ring-2 focus:ring-accent/40"
-                value={importForm.statusToStateKey}
-                onChange={(e) => setImportForm({ ...importForm, statusToStateKey: e.target.value })}
-              />
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <div className="text-xs text-muted">priorityMap (JSON)</div>
-                  <textarea
-                    className="min-h-24 w-full rounded-2xl bg-white/5 border border-white/10 p-3 text-sm text-text outline-none focus:ring-2 focus:ring-accent/40"
-                    value={importForm.priorityMap}
-                    onChange={(e) => setImportForm({ ...importForm, priorityMap: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <div className="text-xs text-muted">typeMap (JSON)</div>
-                  <textarea
-                    className="min-h-24 w-full rounded-2xl bg-white/5 border border-white/10 p-3 text-sm text-text outline-none focus:ring-2 focus:ring-accent/40"
-                    value={importForm.typeMap}
-                    onChange={(e) => setImportForm({ ...importForm, typeMap: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="text-xs text-muted">Conflict policy</div>
-              <select
-                className="h-10 w-full rounded-xl bg-white/5 border border-white/10 px-3 text-sm"
-                value={importForm.conflictPolicy}
-                onChange={(e) => setImportForm({ ...importForm, conflictPolicy: e.target.value })}
-              >
-                <option value="jiraWins">jiraWins</option>
-                <option value="appWins">appWins (not implemented)</option>
-                <option value="manual">manual (not implemented)</option>
-              </select>
-
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <Button
-                  disabled={importing || syncingNow}
+                  variant="ghost"
+                  disabled={testingConnection || !importForm.connectionId || Boolean(selectedConnection?.needsReconnect)}
                   onClick={async () => {
                     if (!importForm.connectionId) {
                       toast.error("Select a Jira connection first.");
                       return;
                     }
-                    if (selectedConnection?.needsReconnect) {
-                      toast.error("Selected connection needs reconnect. Re-save token in Connect first.");
-                      return;
-                    }
                     try {
-                      setImporting(true);
-                      let statusToStateKey: Record<string, string>;
-                      let priorityMap: Record<string, string>;
-                      let typeMap: Record<string, string>;
-                      try {
-                        statusToStateKey = JSON.parse(importForm.statusToStateKey);
-                        priorityMap = JSON.parse(importForm.priorityMap);
-                        typeMap = JSON.parse(importForm.typeMap);
-                      } catch {
-                        toast.error("Invalid JSON mapping. Check status/priority/type map fields.");
-                        return;
-                      }
-                      const run = await api.jiraImport({
-                        boardId: board.id,
-                        connectionId: importForm.connectionId,
-                        jql: importForm.jql,
-                        statusToStateKey,
-                        priorityMap,
-                        typeMap,
-                        conflictPolicy: importForm.conflictPolicy
-                      });
-                      toast.success("Import started");
-                      setRuns((prev) => [run, ...(prev || [])]);
-                      await refresh();
+                      setTestingConnection(true);
+                      setJiraTestStatus("unknown");
+                      await api.jiraTestConnection(importForm.connectionId);
+                      setJiraTestStatus("ok");
+                      toast.success("Jira connection test passed");
                     } catch (e: any) {
+                      setJiraTestStatus("error");
                       toast.error(String(e?.message || e));
                     } finally {
-                      setImporting(false);
+                      setTestingConnection(false);
                     }
                   }}
                 >
-                  {importing ? "Importing…" : "Import by JQL"}
+                  {testingConnection ? "Testing…" : "Test Jira connection"}
                 </Button>
-                <Button
-                  variant="ghost"
-                  disabled={importing || syncingNow}
-                  onClick={async () => {
-                    if (firstProfileConnection?.needsReconnect) {
-                      toast.error("Profile connection needs reconnect. Re-save token in Connect first.");
-                      return;
-                    }
-                    try {
-                      setSyncingNow(true);
-                      const ps = profiles || [];
-                      const p = ps[0];
-                      if (!p) {
-                        toast.error("No sync profile yet. Run an import first.");
-                        return;
-                      }
-                      const run = await api.jiraSyncNow(p.id);
-                      toast.success("Sync started");
-                      setRuns((prev) => [run, ...(prev || [])]);
-                      await refresh();
-                    } catch (e: any) {
-                      toast.error(String(e?.message || e));
-                    } finally {
-                      setSyncingNow(false);
-                    }
-                  }}
-                >
-                  {syncingNow ? "Syncing…" : "Sync Now"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  disabled={!board?.id}
-                  onClick={async () => {
-                    if (!board?.id) return;
-                    if (!confirm("Clear Jira sync run logs for this board?")) return;
-                    try {
-                      await api.jiraClearSyncRuns(board.id);
-                      toast.success("Cleared");
-                      await refresh();
-                    } catch (e: any) {
-                      toast.error(String(e?.message || e));
-                    }
-                  }}
-                >
-                  Clear logs
-                </Button>
+                {jiraTestStatus === "ok" ? <span className="text-xs text-ok">Connection healthy</span> : null}
+                {jiraTestStatus === "error" ? <span className="text-xs text-danger">Connection failed</span> : null}
               </div>
-              {!importForm.connectionId ? <div className="text-xs text-warn">Import disabled: select a Jira connection.</div> : null}
-              {selectedConnection?.needsReconnect ? (
-                <div className="text-xs text-danger">Import blocked: selected connection needs reconnect.</div>
-              ) : null}
-              {!(profiles || []).length ? <div className="text-xs text-muted">Sync Now needs a profile created by Import.</div> : null}
+
+              <details className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                <summary className="cursor-pointer text-sm font-medium">Advanced data sync (optional)</summary>
+                <div className="mt-3 space-y-2">
+                  <div className="text-xs text-muted">JQL</div>
+                  <Input value={importForm.jql} onChange={(e) => setImportForm({ ...importForm, jql: e.target.value })} />
+
+                  <div className="text-xs text-muted">statusToStateKey (JSON)</div>
+                  <textarea
+                    className="min-h-24 w-full rounded-2xl bg-white/5 border border-white/10 p-3 text-sm text-text outline-none focus:ring-2 focus:ring-accent/40"
+                    value={importForm.statusToStateKey}
+                    onChange={(e) => setImportForm({ ...importForm, statusToStateKey: e.target.value })}
+                  />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-xs text-muted">priorityMap (JSON)</div>
+                      <textarea
+                        className="min-h-24 w-full rounded-2xl bg-white/5 border border-white/10 p-3 text-sm text-text outline-none focus:ring-2 focus:ring-accent/40"
+                        value={importForm.priorityMap}
+                        onChange={(e) => setImportForm({ ...importForm, priorityMap: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted">typeMap (JSON)</div>
+                      <textarea
+                        className="min-h-24 w-full rounded-2xl bg-white/5 border border-white/10 p-3 text-sm text-text outline-none focus:ring-2 focus:ring-accent/40"
+                        value={importForm.typeMap}
+                        onChange={(e) => setImportForm({ ...importForm, typeMap: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-muted">Conflict policy</div>
+                  <select
+                    className="h-10 w-full rounded-xl bg-white/5 border border-white/10 px-3 text-sm"
+                    value={importForm.conflictPolicy}
+                    onChange={(e) => setImportForm({ ...importForm, conflictPolicy: e.target.value })}
+                  >
+                    <option value="jiraWins">jiraWins</option>
+                    <option value="appWins">appWins (not implemented)</option>
+                    <option value="manual">manual (not implemented)</option>
+                  </select>
+
+                  <div className="flex gap-2">
+                    <Button
+                      disabled={importing || syncingNow}
+                      onClick={async () => {
+                        if (!importForm.connectionId) {
+                          toast.error("Select a Jira connection first.");
+                          return;
+                        }
+                        if (selectedConnection?.needsReconnect) {
+                          toast.error("Selected connection needs reconnect. Re-save token in Connect first.");
+                          return;
+                        }
+                        try {
+                          setImporting(true);
+                          let statusToStateKey: Record<string, string>;
+                          let priorityMap: Record<string, string>;
+                          let typeMap: Record<string, string>;
+                          try {
+                            statusToStateKey = JSON.parse(importForm.statusToStateKey);
+                            priorityMap = JSON.parse(importForm.priorityMap);
+                            typeMap = JSON.parse(importForm.typeMap);
+                          } catch {
+                            toast.error("Invalid JSON mapping. Check status/priority/type map fields.");
+                            return;
+                          }
+                          const run = await api.jiraImport({
+                            boardId: board.id,
+                            connectionId: importForm.connectionId,
+                            jql: importForm.jql,
+                            statusToStateKey,
+                            priorityMap,
+                            typeMap,
+                            conflictPolicy: importForm.conflictPolicy
+                          });
+                          const profileId = (run as any).profileId as string | undefined;
+                          toast.success("Import started");
+                          setProfiles((prev) => {
+                            if (!profileId) return prev || [];
+                            const base = prev || [];
+                            if (base.some((p: any) => p.id === profileId)) return base;
+                            return [
+                              {
+                                id: profileId,
+                                boardId: board.id,
+                                connectionId: importForm.connectionId,
+                                jql: importForm.jql,
+                                conflictPolicy: importForm.conflictPolicy,
+                                createdAt: new Date().toISOString()
+                              },
+                              ...base
+                            ];
+                          });
+                          setRuns((prev) => [run, ...(prev || [])]);
+                          if (run.status === "error") {
+                            toast.error((run as any).errorMessage || "Import profile created, but initial sync failed. Check Sync runs details.");
+                          } else {
+                            const done = (run.log || []).find((x: any) => typeof x?.message === "string" && x.message.startsWith("Done "));
+                            if (done) toast.message(done.message);
+                          }
+                          await refresh();
+                        } catch (e: any) {
+                          toast.error(String(e?.message || e));
+                        } finally {
+                          setImporting(false);
+                        }
+                      }}
+                    >
+                      {importing ? "Importing…" : "Run initial import"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      disabled={importing || syncingNow}
+                      onClick={async () => {
+                        if (firstProfileConnection?.needsReconnect) {
+                          toast.error("Profile connection needs reconnect. Re-save token in Connect first.");
+                          return;
+                        }
+                        try {
+                          setSyncingNow(true);
+                          const ps = profiles || [];
+                          const p = ps[0];
+                          if (!p) {
+                            toast.error("No sync profile yet. Run an import first.");
+                            return;
+                          }
+                          const run = await api.jiraSyncNow(p.id);
+                          toast.success("Sync started");
+                          setRuns((prev) => [run, ...(prev || [])]);
+                          await refresh();
+                        } catch (e: any) {
+                          toast.error(String(e?.message || e));
+                        } finally {
+                          setSyncingNow(false);
+                        }
+                      }}
+                    >
+                      {syncingNow ? "Syncing…" : "Run sync now"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      disabled={!board?.id}
+                      onClick={async () => {
+                        if (!board?.id) return;
+                        if (!confirm("Clear Jira sync run logs for this board?")) return;
+                        try {
+                          await api.jiraClearSyncRuns(board.id);
+                          toast.success("Cleared");
+                          await refresh();
+                        } catch (e: any) {
+                          toast.error(String(e?.message || e));
+                        }
+                      }}
+                    >
+                      Clear sync logs
+                    </Button>
+                  </div>
+                  {!importForm.connectionId ? <div className="text-xs text-warn">Import disabled: select a Jira connection.</div> : null}
+                  {selectedConnection?.needsReconnect ? <div className="text-xs text-danger">Import blocked: selected connection needs reconnect.</div> : null}
+                  {!(profiles || []).length ? <div className="text-xs text-muted">Sync Now needs a profile created by Import. If Import did nothing, check Sync runs log for errors.</div> : null}
+                </div>
+              </details>
             </div>
 
             <div className="mt-5 text-sm font-semibold">Sync runs</div>
