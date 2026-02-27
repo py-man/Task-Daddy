@@ -8,7 +8,7 @@ from tests.conftest import enable_admin_mfa, login
 
 @pytest.mark.anyio
 async def test_openproject_connection_crud_and_test(client, monkeypatch):
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   await enable_admin_mfa(client)
 
   async def _fake_ping(*, base_url: str, api_token: str):

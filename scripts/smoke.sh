@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 
 # Safety: always isolate smoke from live stacks by using a dedicated
 # Compose project name unless explicitly overridden.
-SMOKE_PROJECT_NAME="${SMOKE_PROJECT_NAME:-neonlanes_smoke}"
+SMOKE_PROJECT_NAME="${SMOKE_PROJECT_NAME:-taskdaddy_smoke}"
 export COMPOSE_PROJECT_NAME="$SMOKE_PROJECT_NAME"
 
 dc() {
@@ -51,20 +51,22 @@ PY
 
 SMOKE_EMAIL="${SMOKE_EMAIL:-}"
 SMOKE_PASSWORD="${SMOKE_PASSWORD:-}"
-SMOKE_API_PORT="${SMOKE_API_PORT:-18000}"
-SMOKE_WEB_PORT="${SMOKE_WEB_PORT:-13005}"
-SMOKE_DB_PORT="${SMOKE_DB_PORT:-15432}"
-SMOKE_REDIS_PORT="${SMOKE_REDIS_PORT:-16379}"
+SMOKE_API_PORT="${SMOKE_API_PORT:-28000}"
+SMOKE_WEB_PORT="${SMOKE_WEB_PORT:-23105}"
+SMOKE_DB_PORT="${SMOKE_DB_PORT:-25432}"
+SMOKE_REDIS_PORT="${SMOKE_REDIS_PORT:-26379}"
+SMOKE_POSTGRES_PASSWORD="${SMOKE_POSTGRES_PASSWORD:-change-me-local}"
 export API_PORT="${API_PORT:-$SMOKE_API_PORT}"
 export WEB_PORT="${WEB_PORT:-$SMOKE_WEB_PORT}"
 export DB_PORT="${DB_PORT:-$SMOKE_DB_PORT}"
 export REDIS_PORT="${REDIS_PORT:-$SMOKE_REDIS_PORT}"
+export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-$SMOKE_POSTGRES_PASSWORD}"
 API_BASE="${API_BASE:-http://127.0.0.1:$API_PORT}"
 WEB_BASE="${WEB_BASE:-http://127.0.0.1:$WEB_PORT}"
 SMOKE_RECREATE_STACK="${SMOKE_RECREATE_STACK:-1}"
 SMOKE_EXPECT_MARKETING="${SMOKE_EXPECT_MARKETING:-0}"
 SMOKE_EXPECT_3D_LAB="${SMOKE_EXPECT_3D_LAB:-0}"
-SMOKE_BOOTSTRAP_ADMIN_EMAIL="${SMOKE_BOOTSTRAP_ADMIN_EMAIL:-smoke.admin@neonlanes.local}"
+SMOKE_BOOTSTRAP_ADMIN_EMAIL="${SMOKE_BOOTSTRAP_ADMIN_EMAIL:-smoke.admin@taskdaddy.local}"
 
 SMOKE_RUN_ID="$(date +%s%N)-$RANDOM"
 
@@ -76,8 +78,8 @@ if [ -z "$SMOKE_PASSWORD" ]; then
 fi
 
 if [ "$SMOKE_RECREATE_STACK" = "1" ]; then
-  dc stop api web db redis || true
-  dc rm -f api web db redis || true
+  # Full teardown keeps smoke DB credentials deterministic across runs.
+  dc down -v --remove-orphans || true
   dc up --build -d
 fi
 
@@ -143,9 +145,9 @@ async def main():
 asyncio.run(main())
 PY"
 
-COOKIE_JAR="/tmp/neonlanes.cookies"
+COOKIE_JAR="/tmp/taskdaddy.cookies"
 rm -f "$COOKIE_JAR"
-COOKIE_HEADERS="/tmp/neonlanes.cookies.headers"
+COOKIE_HEADERS="/tmp/taskdaddy.cookies.headers"
 AUTH_COOKIE_HEADER=""
 
 extract_session_cookie() {

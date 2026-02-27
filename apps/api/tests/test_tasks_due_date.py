@@ -8,7 +8,7 @@ from conftest import login
 
 @pytest.mark.anyio
 async def test_due_date_accepts_date_only_and_iso(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "Due Date Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
@@ -33,7 +33,7 @@ async def test_due_date_accepts_date_only_and_iso(client: AsyncClient) -> None:
 
 @pytest.mark.anyio
 async def test_due_date_empty_string_clears(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "Due Date Clear Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()

@@ -10,7 +10,7 @@ from tests.conftest import login
 
 @pytest.mark.anyio
 async def test_jira_task_create_returns_400_when_connection_token_cannot_be_decrypted(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "Jira Key Mismatch Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
@@ -31,7 +31,7 @@ async def test_jira_task_create_returns_400_when_connection_token_cannot_be_decr
 
   res = await client.post(
     f"/tasks/{t['id']}/jira/create",
-    json={"connectionId": conn_id, "projectKey": "OPS", "issueType": "Task", "enableSync": True, "assigneeMode": "none"},
+    json={"connectionId": conn_id, "projectKey": "OPS", "issueType": "Task", "enableSync": True, "assigneeMode": "unassigned"},
   )
   assert res.status_code == 400, res.text
   assert "cannot be decrypted" in str(res.json().get("detail", "")).lower()
@@ -39,7 +39,7 @@ async def test_jira_task_create_returns_400_when_connection_token_cannot_be_decr
 
 @pytest.mark.anyio
 async def test_openproject_task_create_returns_400_when_connection_token_cannot_be_decrypted(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "OpenProject Key Mismatch Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
@@ -70,7 +70,7 @@ async def test_openproject_task_create_returns_400_when_connection_token_cannot_
 
 @pytest.mark.anyio
 async def test_webhook_inbound_returns_400_when_secret_cannot_be_decrypted(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   async with SessionLocal() as db:
     secret = WebhookSecret(

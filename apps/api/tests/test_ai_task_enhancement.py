@@ -10,7 +10,7 @@ from conftest import login
 
 @pytest.mark.anyio
 async def test_task_ai_enhance_is_intent_aware_for_access_issues(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": f"AI Access {secrets.token_hex(4)}"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
@@ -51,7 +51,7 @@ async def test_task_ai_enhance_is_intent_aware_for_access_issues(client: AsyncCl
 
 @pytest.mark.anyio
 async def test_task_ai_enhance_differs_for_feature_request(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": f"AI Feature {secrets.token_hex(4)}"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()

@@ -12,7 +12,7 @@ from conftest import login
 
 @pytest.mark.anyio
 async def test_attachment_upload_enforces_size_limit(client: AsyncClient) -> None:
-  await login(client, "member@neonlanes.local", "member1234")
+  await login(client, "member@taskdaddy.local", "member1234")
 
   board = (await client.post("/boards", json={"name": f"Upload {secrets.token_hex(4)}"})).json()
   lanes = (await client.get(f"/boards/{board['id']}/lanes")).json()

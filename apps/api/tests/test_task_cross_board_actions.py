@@ -16,7 +16,7 @@ async def _first_lane_id(client: AsyncClient, board_id: str) -> str:
 
 @pytest.mark.anyio
 async def test_duplicate_task_to_another_board(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b1 = (await client.post("/boards", json={"name": "Cross Source"})).json()
   b2 = (await client.post("/boards", json={"name": "Cross Target"})).json()
@@ -48,7 +48,7 @@ async def test_duplicate_task_to_another_board(client: AsyncClient) -> None:
 
 @pytest.mark.anyio
 async def test_transfer_task_to_another_board(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b1 = (await client.post("/boards", json={"name": "Move Source"})).json()
   b2 = (await client.post("/boards", json={"name": "Move Target"})).json()

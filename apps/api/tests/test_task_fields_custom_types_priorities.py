@@ -8,7 +8,7 @@ from tests.conftest import login
 
 @pytest.mark.anyio
 async def test_task_types_and_priorities_defaults_and_validation(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "Fields Board"})).json()
   board_id = b["id"]
@@ -53,7 +53,7 @@ async def test_task_types_and_priorities_defaults_and_validation(client: AsyncCl
 
 @pytest.mark.anyio
 async def test_sync_task_fields_to_all_boards_copies_custom_and_updates_defaults(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   src = (await client.post("/boards", json={"name": "Source Board"})).json()
   dst = (await client.post("/boards", json={"name": "Target Board"})).json()

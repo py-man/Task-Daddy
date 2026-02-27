@@ -11,9 +11,9 @@ from conftest import enable_admin_mfa, login
 
 @pytest.mark.anyio
 async def test_notifications_destinations_crud_and_test_send_local(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   mfa = await enable_admin_mfa(client)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(mfa["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(mfa["secret"]))
 
   # Create local destination (no external network required)
   name = f"Local {secrets.token_hex(4)}"

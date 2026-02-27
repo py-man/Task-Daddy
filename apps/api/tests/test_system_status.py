@@ -9,15 +9,15 @@ pytestmark = pytest.mark.anyio
 
 
 async def test_system_status_requires_admin(client):
-  await login(client, "member@neonlanes.local", "member1234")
+  await login(client, "member@taskdaddy.local", "member1234")
   res = await client.get("/admin/system-status")
   assert res.status_code == 403
 
 
 async def test_system_status_returns_sections_for_admin_with_mfa(client):
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   setup = await enable_admin_mfa(client)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(setup["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(setup["secret"]))
   res = await client.get("/admin/system-status")
   assert res.status_code == 200, res.text
   body = res.json()

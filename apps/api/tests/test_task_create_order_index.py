@@ -8,7 +8,7 @@ from conftest import login
 
 @pytest.mark.anyio
 async def test_create_multiple_tasks_in_same_lane_assigns_order_index(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "Order Index Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()

@@ -9,7 +9,7 @@ from conftest import enable_admin_mfa, login
 
 @pytest.mark.anyio
 async def test_board_name_unique_case_insensitive(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   res1 = await client.post("/boards", json={"name": "  Unique Board  "})
   assert res1.status_code == 200, res1.text
@@ -20,23 +20,23 @@ async def test_board_name_unique_case_insensitive(client: AsyncClient) -> None:
 
 @pytest.mark.anyio
 async def test_admin_can_disable_user_and_sessions_invalidated(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   mfa = await enable_admin_mfa(client)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(mfa["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(mfa["secret"]))
 
-  cres = await client.post("/users", json={"email": "disable.me@neonlanes.local", "name": "Disable Me", "role": "member", "password": "password123"})
+  cres = await client.post("/users", json={"email": "disable.me@taskdaddy.local", "name": "Disable Me", "role": "member", "password": "password123"})
   assert cres.status_code == 200, cres.text
   uid = cres.json()["user"]["id"]
 
   # Login as that user
-  res_login = await client.post("/auth/login", json={"email": "disable.me@neonlanes.local", "password": "password123"})
+  res_login = await client.post("/auth/login", json={"email": "disable.me@taskdaddy.local", "password": "password123"})
   assert res_login.status_code == 200, res_login.text
   cookie = res_login.headers.get("set-cookie") or ""
   assert "nl_session=" in cookie
   user_session = cookie.split("nl_session=", 1)[1].split(";", 1)[0]
 
   # Disable from admin session (re-login admin)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(mfa["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(mfa["secret"]))
   dis = await client.patch(f"/users/{uid}", json={"active": False})
   assert dis.status_code == 200, dis.text
   assert dis.json()["active"] is False
@@ -49,7 +49,7 @@ async def test_admin_can_disable_user_and_sessions_invalidated(client: AsyncClie
 
 @pytest.mark.anyio
 async def test_board_delete_with_transfer_moves_tasks(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   a = await client.post("/boards", json={"name": "Transfer From"})
   b = await client.post("/boards", json={"name": "Transfer To"})
@@ -79,12 +79,12 @@ async def test_board_delete_with_transfer_moves_tasks(client: AsyncClient) -> No
 
 @pytest.mark.anyio
 async def test_delete_user_reassigns_or_unassigns_tasks(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   mfa = await enable_admin_mfa(client)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(mfa["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(mfa["secret"]))
 
-  u1 = await client.post("/users", json={"email": "u1@neonlanes.local", "name": "U1", "role": "member", "password": "password123"})
-  u2 = await client.post("/users", json={"email": "u2@neonlanes.local", "name": "U2", "role": "member", "password": "password123"})
+  u1 = await client.post("/users", json={"email": "u1@taskdaddy.local", "name": "U1", "role": "member", "password": "password123"})
+  u2 = await client.post("/users", json={"email": "u2@taskdaddy.local", "name": "U2", "role": "member", "password": "password123"})
   assert u1.status_code == 200 and u2.status_code == 200
   u1_id = u1.json()["user"]["id"]
   u2_id = u2.json()["user"]["id"]
@@ -95,8 +95,8 @@ async def test_delete_user_reassigns_or_unassigns_tasks(client: AsyncClient) -> 
   lanes = await client.get(f"/boards/{board_id}/lanes")
   lane_id = lanes.json()[0]["id"]
 
-  add1 = await client.post(f"/boards/{board_id}/members", json={"email": "u1@neonlanes.local", "role": "member"})
-  add2 = await client.post(f"/boards/{board_id}/members", json={"email": "u2@neonlanes.local", "role": "member"})
+  add1 = await client.post(f"/boards/{board_id}/members", json={"email": "u1@taskdaddy.local", "role": "member"})
+  add2 = await client.post(f"/boards/{board_id}/members", json={"email": "u2@taskdaddy.local", "role": "member"})
   assert add1.status_code == 200 and add2.status_code == 200
 
   t1 = await client.post(

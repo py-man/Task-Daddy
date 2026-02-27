@@ -20,7 +20,7 @@ from tests.conftest import login
 
 @pytest.mark.anyio
 async def test_task_ics_download(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "ICS Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
@@ -47,7 +47,7 @@ async def test_task_ics_download(client: AsyncClient) -> None:
 
 @pytest.mark.anyio
 async def test_task_ics_email_uses_enabled_smtp_destination(client: AsyncClient, monkeypatch) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "ICS Mail Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
@@ -108,7 +108,7 @@ async def test_task_ics_email_uses_enabled_smtp_destination(client: AsyncClient,
 
 @pytest.mark.anyio
 async def test_task_reminders_create_list_cancel_and_dispatch(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "Reminder Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
@@ -175,7 +175,7 @@ async def test_task_reminders_create_list_cancel_and_dispatch(client: AsyncClien
 
 @pytest.mark.anyio
 async def test_task_reminder_rejects_naive_datetime(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "Reminder TZ Validation Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
@@ -197,7 +197,7 @@ async def test_task_reminder_rejects_naive_datetime(client: AsyncClient) -> None
 
 @pytest.mark.anyio
 async def test_task_reminder_external_failure_sets_error_and_retries(client: AsyncClient, monkeypatch) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   board_name = f"Reminder External Fail Board {secrets.token_hex(4)}"
   b_res = await client.post("/boards", json={"name": board_name})

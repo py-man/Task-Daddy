@@ -7,14 +7,14 @@ from tests.conftest import login, seeded_user_id
 
 @pytest.mark.anyio
 async def test_inapp_notifications_task_assigned_and_mark_read(client):
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   board = (await client.post("/boards", json={"name": "Notif Board"})).json()
   lanes = (await client.get(f"/boards/{board['id']}/lanes")).json()
   lane_id = lanes[0]["id"]
 
-  member_id = await seeded_user_id("member@neonlanes.local")
-  add = await client.post(f"/boards/{board['id']}/members", json={"email": "member@neonlanes.local", "role": "member"})
+  member_id = await seeded_user_id("member@taskdaddy.local")
+  add = await client.post(f"/boards/{board['id']}/members", json={"email": "member@taskdaddy.local", "role": "member"})
   assert add.status_code in (200, 409), add.text
 
   created = await client.post(
@@ -23,7 +23,7 @@ async def test_inapp_notifications_task_assigned_and_mark_read(client):
   )
   assert created.status_code == 200, created.text
 
-  await login(client, "member@neonlanes.local", "member1234")
+  await login(client, "member@taskdaddy.local", "member1234")
   inbox = await client.get("/notifications/inapp", params={"unreadOnly": "true", "limit": "50"})
   assert inbox.status_code == 200, inbox.text
   items = inbox.json()
@@ -42,15 +42,15 @@ async def test_inapp_notifications_task_assigned_and_mark_read(client):
 
 @pytest.mark.anyio
 async def test_inapp_notifications_mentions_and_task_moved(client):
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   board = (await client.post("/boards", json={"name": "Notif Mention Board"})).json()
   lanes = (await client.get(f"/boards/{board['id']}/lanes")).json()
   backlog_lane = lanes[0]["id"]
   target_lane = lanes[1]["id"] if len(lanes) > 1 else lanes[0]["id"]
 
-  member_id = await seeded_user_id("member@neonlanes.local")
-  add = await client.post(f"/boards/{board['id']}/members", json={"email": "member@neonlanes.local", "role": "member"})
+  member_id = await seeded_user_id("member@taskdaddy.local")
+  add = await client.post(f"/boards/{board['id']}/members", json={"email": "member@taskdaddy.local", "role": "member"})
   assert add.status_code in (200, 409), add.text
 
   created = await client.post(
@@ -60,11 +60,11 @@ async def test_inapp_notifications_mentions_and_task_moved(client):
   assert created.status_code == 200, created.text
   task = created.json()
 
-  await client.post(f"/tasks/{task['id']}/comments", json={"body": "Please review this @member and @member@neonlanes.local"})
+  await client.post(f"/tasks/{task['id']}/comments", json={"body": "Please review this @member and @member@taskdaddy.local"})
   moved = await client.post(f"/tasks/{task['id']}/move", json={"laneId": target_lane, "toIndex": 0, "version": task["version"]})
   assert moved.status_code == 200, moved.text
 
-  await login(client, "member@neonlanes.local", "member1234")
+  await login(client, "member@taskdaddy.local", "member1234")
   inbox = await client.get("/notifications/inapp", params={"unreadOnly": "true", "limit": "100"})
   assert inbox.status_code == 200, inbox.text
   items = inbox.json()
@@ -79,15 +79,15 @@ async def test_inapp_notifications_mentions_and_task_moved(client):
 
 @pytest.mark.anyio
 async def test_inapp_notifications_burst_collapse_for_comment_and_move(client):
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   board = (await client.post("/boards", json={"name": "Notif Burst Board"})).json()
   lanes = (await client.get(f"/boards/{board['id']}/lanes")).json()
   backlog_lane = lanes[0]["id"]
   target_lane = lanes[1]["id"] if len(lanes) > 1 else lanes[0]["id"]
 
-  member_id = await seeded_user_id("member@neonlanes.local")
-  add = await client.post(f"/boards/{board['id']}/members", json={"email": "member@neonlanes.local", "role": "member"})
+  member_id = await seeded_user_id("member@taskdaddy.local")
+  add = await client.post(f"/boards/{board['id']}/members", json={"email": "member@taskdaddy.local", "role": "member"})
   assert add.status_code in (200, 409), add.text
 
   created = await client.post(
@@ -107,7 +107,7 @@ async def test_inapp_notifications_burst_collapse_for_comment_and_move(client):
   move2 = await client.post(f"/tasks/{task['id']}/move", json={"laneId": backlog_lane, "toIndex": 0, "version": moved["version"]})
   assert move2.status_code == 200, move2.text
 
-  await login(client, "member@neonlanes.local", "member1234")
+  await login(client, "member@taskdaddy.local", "member1234")
   inbox = await client.get("/notifications/inapp", params={"unreadOnly": "true", "limit": "100"})
   assert inbox.status_code == 200, inbox.text
   items = inbox.json()

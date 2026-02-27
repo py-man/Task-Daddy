@@ -16,7 +16,7 @@ from tests.conftest import enable_admin_mfa, login
 
 @pytest.mark.anyio
 async def test_full_backup_create_list_restore_idempotent(client):
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   await enable_admin_mfa(client)
 
   b = (await client.post("/boards", json={"name": "Backup Test"})).json()
@@ -131,7 +131,7 @@ def test_should_run_scheduled_backup_respects_min_interval(tmp_path: Path):
 
 @pytest.mark.anyio
 async def test_backup_policy_get_and_patch(client):
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   await enable_admin_mfa(client)
 
   got = await client.get("/backups/policy")

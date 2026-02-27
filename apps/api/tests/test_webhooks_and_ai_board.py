@@ -10,7 +10,7 @@ from conftest import login
 
 @pytest.mark.anyio
 async def test_board_ai_returns_actionable_suggestions_but_does_not_mutate(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   # Create board + task (unassigned)
   b = (await client.post("/boards", json={"name": f"AI Board {secrets.token_hex(4)}"})).json()
@@ -36,7 +36,7 @@ async def test_board_ai_returns_actionable_suggestions_but_does_not_mutate(clien
 
 @pytest.mark.anyio
 async def test_board_ai_breakdown_returns_creates_but_does_not_mutate(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": f"AI Breakdown {secrets.token_hex(4)}"})).json()
   board_id = b["id"]
@@ -64,7 +64,7 @@ async def test_board_ai_breakdown_returns_creates_but_does_not_mutate(client: As
 
 @pytest.mark.anyio
 async def test_webhook_inbound_create_task_is_idempotent_and_comment_dedupes(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": f"Webhook Board {secrets.token_hex(4)}"})).json()
   board_id = b["id"]
@@ -103,7 +103,7 @@ async def test_webhook_inbound_create_task_is_idempotent_and_comment_dedupes(cli
 
 @pytest.mark.anyio
 async def test_webhook_create_task_can_create_multiple_without_order_index_error(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": f"Webhook Multi {secrets.token_hex(4)}"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()

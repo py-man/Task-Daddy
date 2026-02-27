@@ -10,7 +10,7 @@ from conftest import login
 
 @pytest.mark.anyio
 async def test_bulk_import_is_idempotent_and_skips_existing_titles(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": f"Import {secrets.token_hex(4)}"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
@@ -44,7 +44,7 @@ async def test_bulk_import_is_idempotent_and_skips_existing_titles(client: Async
 
 @pytest.mark.anyio
 async def test_bulk_import_can_attach_idempotency_key_to_existing_manual_task(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": f"Import Existing {secrets.token_hex(4)}"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()

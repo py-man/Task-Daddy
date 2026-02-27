@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
 from app.config import settings
 from app.db import SessionLocal, engine
 from app.main import app
-from app.security import totp_code
+from app.security import hash_password, totp_code
 from app.rate_limit import limiter
 from app.models import (
   AuditEvent,
@@ -81,8 +81,35 @@ async def _reset_db() -> None:
     await db.execute(delete(MfaTrustedDevice))
     await db.execute(delete(BackupPolicy))
 
-    keep = ["admin@neonlanes.local", "member@neonlanes.local"]
+    keep = [TEST_ADMIN_EMAIL, TEST_MEMBER_EMAIL]
     await db.execute(delete(User).where(User.email.notin_(keep)))
+    # Ensure deterministic seeded users always exist for tests.
+    for email, name, role, pwd in (
+      (TEST_ADMIN_EMAIL, "Admin", "admin", TEST_ADMIN_PASSWORD),
+      (TEST_MEMBER_EMAIL, "Member", "member", TEST_MEMBER_PASSWORD),
+    ):
+      ures = await db.execute(select(User).where(User.email == email))
+      u = ures.scalar_one_or_none()
+      if u is None:
+        db.add(
+          User(
+            email=email,
+            name=name,
+            role=role,
+            password_hash=hash_password(pwd),
+            avatar_url=None,
+            timezone="UTC",
+            active=True,
+            login_disabled=False,
+          )
+        )
+      else:
+        u.name = name
+        u.role = role
+        u.password_hash = hash_password(pwd)
+        u.active = True
+        u.login_disabled = False
+    await db.flush()
     # Reset seeded users to known state for each test.
     await db.execute(
       update(User)
@@ -162,3 +189,7 @@ async def enable_admin_mfa(client: AsyncClient) -> dict:
   confirm = await client.post("/auth/mfa/confirm", json={"totpCode": totp_code(secret)})
   assert confirm.status_code == 200, confirm.text
   return {"secret": secret, "recoveryCodes": confirm.json()["recoveryCodes"]}
+TEST_ADMIN_EMAIL = "admin@taskdaddy.local"
+TEST_MEMBER_EMAIL = "member@taskdaddy.local"
+TEST_ADMIN_PASSWORD = "admin1234"
+TEST_MEMBER_PASSWORD = "member1234"

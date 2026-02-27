@@ -8,13 +8,13 @@ from conftest import login
 
 @pytest.mark.anyio
 async def test_login_is_case_insensitive_for_email(client: AsyncClient) -> None:
-  res = await client.post("/auth/login", json={"email": "ADMIN@NEONLANES.LOCAL", "password": "admin1234"})
+  res = await client.post("/auth/login", json={"email": "ADMIN@TASKDADDY.LOCAL", "password": "admin1234"})
   assert res.status_code == 200, res.text
 
 
 @pytest.mark.anyio
 async def test_create_task_in_backlog_lane_and_edit_title(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "Core Flow Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()

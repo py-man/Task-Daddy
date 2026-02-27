@@ -11,42 +11,42 @@ from app.security import totp_code
 
 @pytest.mark.anyio
 async def test_admin_can_create_user(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   mfa = await enable_admin_mfa(client)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(mfa["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(mfa["secret"]))
 
   res = await client.post(
     "/users",
-    json={"email": "new.user@neonlanes.local", "name": "New User", "role": "member"},
+    json={"email": "new.user@taskdaddy.local", "name": "New User", "role": "member"},
   )
   assert res.status_code == 200, res.text
   body = res.json()
-  assert body["user"]["email"] == "new.user@neonlanes.local"
+  assert body["user"]["email"] == "new.user@taskdaddy.local"
   assert body["tempPassword"]
 
   res2 = await client.get("/users")
   assert res2.status_code == 200
   emails = [u["email"] for u in res2.json()]
-  assert "new.user@neonlanes.local" in emails
+  assert "new.user@taskdaddy.local" in emails
 
 
 @pytest.mark.anyio
 async def test_member_cannot_create_user(client: AsyncClient) -> None:
-  await login(client, "member@neonlanes.local", "member1234")
+  await login(client, "member@taskdaddy.local", "member1234")
   res = await client.post(
     "/users",
-    json={"email": "x@neonlanes.local", "name": "X", "role": "member"},
+    json={"email": "x@taskdaddy.local", "name": "X", "role": "member"},
   )
   assert res.status_code == 403
 
 
 @pytest.mark.anyio
 async def test_admin_can_invite_user_and_create_reset_token(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   mfa = await enable_admin_mfa(client)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(mfa["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(mfa["secret"]))
 
-  invited_email = "invite.user@neonlanes.local"
+  invited_email = "invite.user@taskdaddy.local"
   res = await client.post(
     "/users/invite",
     json={"email": invited_email, "name": "Invite User", "role": "member", "inviteBaseUrl": "http://localhost:3000"},
@@ -73,11 +73,11 @@ async def test_admin_can_invite_user_and_create_reset_token(client: AsyncClient)
 
 @pytest.mark.anyio
 async def test_invite_existing_user_rotates_unexpired_token(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   mfa = await enable_admin_mfa(client)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(mfa["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(mfa["secret"]))
 
-  invited_email = "rotate.invite@neonlanes.local"
+  invited_email = "rotate.invite@taskdaddy.local"
   first = await client.post(
     "/users/invite",
     json={"email": invited_email, "name": "Rotate First", "role": "member", "inviteBaseUrl": "http://localhost:3000"},
@@ -109,22 +109,22 @@ async def test_invite_existing_user_rotates_unexpired_token(client: AsyncClient)
 
 @pytest.mark.anyio
 async def test_member_cannot_invite_user(client: AsyncClient) -> None:
-  await login(client, "member@neonlanes.local", "member1234")
+  await login(client, "member@taskdaddy.local", "member1234")
   res = await client.post(
     "/users/invite",
-    json={"email": "blocked.invite@neonlanes.local", "name": "Blocked", "role": "member"},
+    json={"email": "blocked.invite@taskdaddy.local", "name": "Blocked", "role": "member"},
   )
   assert res.status_code == 403
 
 
 @pytest.mark.anyio
 async def test_task_owner_must_be_board_member(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   mfa = await enable_admin_mfa(client)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(mfa["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(mfa["secret"]))
 
   # Create an extra user (not board member).
-  ures = await client.post("/users", json={"email": "outsider@neonlanes.local", "name": "Outsider", "role": "member"})
+  ures = await client.post("/users", json={"email": "outsider@taskdaddy.local", "name": "Outsider", "role": "member"})
   assert ures.status_code == 200
   outsider_id = ures.json()["user"]["id"]
 
@@ -144,7 +144,7 @@ async def test_task_owner_must_be_board_member(client: AsyncClient) -> None:
   assert tres.status_code == 400
 
   # Add outsider to board then assign works.
-  add = await client.post(f"/boards/{board_id}/members", json={"email": "outsider@neonlanes.local", "role": "member"})
+  add = await client.post(f"/boards/{board_id}/members", json={"email": "outsider@taskdaddy.local", "role": "member"})
   assert add.status_code == 200, add.text
 
   tres2 = await client.post(
@@ -157,9 +157,9 @@ async def test_task_owner_must_be_board_member(client: AsyncClient) -> None:
 
 @pytest.mark.anyio
 async def test_unassign_owner_with_null_ownerId(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   mfa = await enable_admin_mfa(client)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(mfa["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(mfa["secret"]))
 
   bres = await client.post("/boards", json={"name": "Unassign"})
   board_id = bres.json()["id"]
@@ -168,8 +168,8 @@ async def test_unassign_owner_with_null_ownerId(client: AsyncClient) -> None:
 
   # Assign seeded member.
   users = await client.get("/users")
-  member_id = next(u["id"] for u in users.json() if u["email"] == "member@neonlanes.local")
-  add = await client.post(f"/boards/{board_id}/members", json={"email": "member@neonlanes.local", "role": "member"})
+  member_id = next(u["id"] for u in users.json() if u["email"] == "member@taskdaddy.local")
+  add = await client.post(f"/boards/{board_id}/members", json={"email": "member@taskdaddy.local", "role": "member"})
   assert add.status_code == 200, add.text
 
   tres = await client.post(
@@ -187,13 +187,13 @@ async def test_unassign_owner_with_null_ownerId(client: AsyncClient) -> None:
 
 @pytest.mark.anyio
 async def test_admin_can_block_login_and_set_password(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
   mfa = await enable_admin_mfa(client)
-  await login(client, "admin@neonlanes.local", "admin1234", totpCode=totp_code(mfa["secret"]))
+  await login(client, "admin@taskdaddy.local", "admin1234", totpCode=totp_code(mfa["secret"]))
 
   created = await client.post(
     "/users",
-    json={"email": "lockable@neonlanes.local", "name": "Lockable User", "role": "member", "password": "InitialPass123!"},
+    json={"email": "lockable@taskdaddy.local", "name": "Lockable User", "role": "member", "password": "InitialPass123!"},
   )
   assert created.status_code == 200, created.text
   uid = created.json()["user"]["id"]
@@ -202,7 +202,7 @@ async def test_admin_can_block_login_and_set_password(client: AsyncClient) -> No
   assert blocked.status_code == 200, blocked.text
   assert blocked.json()["loginDisabled"] is True
 
-  denied = await client.post("/auth/login", json={"email": "lockable@neonlanes.local", "password": "InitialPass123!"})
+  denied = await client.post("/auth/login", json={"email": "lockable@taskdaddy.local", "password": "InitialPass123!"})
   assert denied.status_code == 403
   assert "Login disabled" in denied.text
 
@@ -210,8 +210,8 @@ async def test_admin_can_block_login_and_set_password(client: AsyncClient) -> No
   assert unblocked.status_code == 200, unblocked.text
   assert unblocked.json()["loginDisabled"] is False
 
-  old_fail = await client.post("/auth/login", json={"email": "lockable@neonlanes.local", "password": "InitialPass123!"})
+  old_fail = await client.post("/auth/login", json={"email": "lockable@taskdaddy.local", "password": "InitialPass123!"})
   assert old_fail.status_code == 401
 
-  new_ok = await client.post("/auth/login", json={"email": "lockable@neonlanes.local", "password": "NewPass456!"})
+  new_ok = await client.post("/auth/login", json={"email": "lockable@taskdaddy.local", "password": "NewPass456!"})
   assert new_ok.status_code == 200, new_ok.text

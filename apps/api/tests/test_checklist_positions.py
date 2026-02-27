@@ -10,7 +10,7 @@ from conftest import login
 
 @pytest.mark.anyio
 async def test_checklist_create_uses_max_position_without_500(client: AsyncClient) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": f"Checklist Pos {secrets.token_hex(4)}"})).json()
   board_id = b["id"]

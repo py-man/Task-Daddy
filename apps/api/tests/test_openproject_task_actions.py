@@ -12,7 +12,7 @@ from tests.conftest import login
 
 @pytest.mark.anyio
 async def test_openproject_task_create_link_pull_sync(client: AsyncClient, monkeypatch) -> None:
-  await login(client, "admin@neonlanes.local", "admin1234")
+  await login(client, "admin@taskdaddy.local", "admin1234")
 
   b = (await client.post("/boards", json={"name": "OpenProject Task Board"})).json()
   lanes = (await client.get(f"/boards/{b['id']}/lanes")).json()
