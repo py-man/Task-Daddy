@@ -7,18 +7,12 @@ mkdir -p "${BACKUP_DIR}"
 
 ts="$(date -u +%Y%m%dT%H%M%SZ)"
 
-# Prefer current compose project DB container; fall back to known prefixes.
+# Prefer current compose project DB container only (avoid cross-stack backups).
 project="${COMPOSE_PROJECT_NAME:-taskdaddy}"
 db_container="$(
   docker ps --format '{{.Names}} {{.Image}}' \
     | awk -v pfx="${project}_" '$2 ~ /postgres:16/ && index($1, pfx) == 1 && $1 ~ /db/ { print $1; exit }'
 )"
-if [[ -z "${db_container}" ]]; then
-  db_container="$(
-    docker ps --format '{{.Names}} {{.Image}}' \
-      | awk '$2 ~ /postgres:16/ && ($1 ~ /^taskdaddy_/ || $1 ~ /^neonlanes_/) && $1 ~ /db/ { print $1; exit }'
-  )"
-fi
 
 if [[ -z "${db_container}" ]]; then
   if [[ "${BACKUP_QUIET:-0}" != "1" ]]; then
@@ -38,8 +32,8 @@ if [[ -z "${pg_user}" || -z "${pg_pass}" || -z "${pg_db}" ]]; then
   exit 0
 fi
 
-out="${BACKUP_DIR}/neonlanes_db_${ts}.dump"
-meta="${BACKUP_DIR}/neonlanes_db_${ts}.meta.txt"
+out="${BACKUP_DIR}/taskdaddy_db_${ts}.dump"
+meta="${BACKUP_DIR}/taskdaddy_db_${ts}.meta.txt"
 
 docker exec "${db_container}" sh -lc "PGPASSWORD='${pg_pass}' pg_dump -U '${pg_user}' -d '${pg_db}' -Fc" > "${out}"
 sha256sum "${out}" > "${out}.sha256"

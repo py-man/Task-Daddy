@@ -375,9 +375,6 @@ export const api = {
   async jiraSyncRuns(boardId: string) {
     return request<SyncRun[]>(`/jira/sync-runs?${new URLSearchParams({ boardId })}`);
   },
-  async jiraTestConnection(connectionId: string) {
-    return request<{ ok: boolean; sample?: any }>(`/jira/connections/${connectionId}/test`, { method: "POST", body: JSON.stringify({}) });
-  },
   async jiraUpdateConnection(connectionId: string, payload: { name?: string | null; defaultAssigneeAccountId?: string | null }) {
     return request<any>(`/jira/connections/${connectionId}`, { method: "PATCH", body: JSON.stringify(payload) });
   },

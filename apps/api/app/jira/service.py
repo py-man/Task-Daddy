@@ -37,6 +37,54 @@ def _error_text(exc: Exception) -> str:
   return exc.__class__.__name__
 
 
+def _is_unbounded_jql_error(exc: JiraApiError) -> bool:
+  msg = (exc.message or "").lower()
+  if "unbounded jql" in msg:
+    return True
+  details = exc.details or {}
+  error_messages = details.get("errorMessages")
+  if isinstance(error_messages, list):
+    for item in error_messages:
+      if isinstance(item, str) and "unbounded jql" in item.lower():
+        return True
+  return False
+
+
+def _bounded_jql(jql: str) -> str:
+  raw = (jql or "").strip()
+  if not raw:
+    return "updated >= -30d ORDER BY updated DESC"
+  lower = raw.lower()
+  order_idx = lower.find(" order by ")
+  if order_idx >= 0:
+    query_part = raw[:order_idx].strip()
+    order_part = raw[order_idx:].strip()
+  else:
+    query_part = raw
+    order_part = "ORDER BY updated DESC"
+  if not query_part or query_part in {"*", "()"}:
+    return f"updated >= -30d {order_part}".strip()
+  return f"({query_part}) AND updated >= -30d {order_part}".strip()
+
+
+async def _jira_search_with_bound_fallback(
+  *,
+  auth: JiraAuth,
+  jql: str,
+  max_results: int,
+  next_page_token: str | None,
+) -> tuple[dict, bool, str]:
+  try:
+    data = await jira_search_jql(auth=auth, jql=jql, max_results=max_results, next_page_token=next_page_token)
+    return data, False, jql
+  except JiraApiError as exc:
+    if not _is_unbounded_jql_error(exc):
+      raise
+    bounded = _bounded_jql(jql)
+    data = await jira_search_jql(auth=auth, jql=bounded, max_results=max_results, next_page_token=next_page_token)
+    return data, True, bounded
+
+
 def _jira_labelize(raw: str) -> str | None:
   s = (raw or "").strip().lower()
   if not s:
@@ -624,8 +672,14 @@ async def _run_sync(
     updated = 0
     conflicts = 0
     next_token: str | None = None
+    warned_on_bounded_jql = False
     while True:
-      data = await jira_search_jql(auth=auth, jql=profile.jql, max_results=50, next_page_token=next_token)
+      data, used_bounded_jql, effective_jql = await _jira_search_with_bound_fallback(
+        auth=auth, jql=profile.jql, max_results=50, next_page_token=next_token
+      )
+      if used_bounded_jql and not warned_on_bounded_jql:
+        warned_on_bounded_jql = True
+        _log(run, "warn", f"Jira rejected unbounded JQL; retried with: {effective_jql}")
       issues = data.get("issues") or []
       if not issues:
         break

@@ -6,11 +6,13 @@ OUT_DIR="${ROOT_DIR}/backups/host-db"
 mkdir -p "${OUT_DIR}"
 
 ts="$(date -u +%Y%m%dT%H%M%SZ)"
-out="${OUT_DIR}/neonlanes_config_integrations_${ts}.json"
+out="${OUT_DIR}/taskdaddy_config_integrations_${ts}.json"
+
+project="${COMPOSE_PROJECT_NAME:-taskdaddy}"
 
 db_container="$(
   docker ps --format '{{.Names}} {{.Image}}' \
-    | awk '/postgres:16/ && /neonlanes/ && /db/ { print $1; exit }'
+    | awk -v pfx="${project}_" '$2 ~ /postgres:16/ && index($1, pfx) == 1 && $1 ~ /db/ { print $1; exit }'
 )"
 
 if [[ -z "${db_container}" ]]; then
