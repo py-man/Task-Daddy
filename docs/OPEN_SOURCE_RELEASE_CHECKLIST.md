@@ -34,8 +34,8 @@ Use this before publishing an image/repo to public users.
 
 ## Build and verification
 
-1. Checkout branch:
-   - `git checkout opensource-neon`
+1. Checkout release branch:
+   - `git checkout <public-release-branch>`
 2. Start clean:
    - `docker-compose down --remove-orphans`
    - `docker-compose up --build -d`
@@ -49,7 +49,7 @@ Use this before publishing an image/repo to public users.
 5. Backend tests (minimum targeted set for shipped integrations):
    - `docker-compose run --rm api bash -lc "cd /app && pytest -q tests/test_task_reminders_and_ics.py tests/test_openproject_integrations.py tests/test_openproject_task_actions.py"`
 6. Web checks:
-   - `npm -w @neonlanes/web run -s typecheck`
+   - `npm -w @task-daddy/web run -s typecheck`
 7. Secret scan (tracked files):
    - `git grep -nE "(AKIA|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|xox[baprs]-|ghp_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z-_]{35})"`
    - expected: no matches
@@ -57,6 +57,8 @@ Use this before publishing an image/repo to public users.
 ## Release hygiene
 
 - Update `CHANGELOG.md`.
+- Confirm `LICENSE` is present and matches the intended open-source terms.
+- Confirm `docs/PUBLIC_ROADMAP.md` is publish-safe and `docs/BACKLOG.md` is absent.
 - Bump version/build metadata.
 - Confirm README quickstart commands work from a clean clone.
 - Run dependency and container image scans in CI.

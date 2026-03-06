@@ -17,7 +17,7 @@ fi
 
 export DEPLOY_TRACK=production
 export DEPLOY_BRANCH="$BRANCH"
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-neonlanes}"
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-taskdaddy}"
 
 ./scripts/release_check.sh pre
 

@@ -1,4 +1,4 @@
-import type { AuditEvent, Board, BoardTaskPriority, BoardTaskType, Lane, SyncRun, Task, TaskReminder, User } from "@neonlanes/shared/schema";
+import type { AuditEvent, Board, BoardTaskPriority, BoardTaskType, Lane, SyncRun, Task, TaskReminder, User } from "@task-daddy/shared/schema";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -480,24 +480,24 @@ export const api = {
   },
 
   async webhookSecrets() {
-    return request<any[]>("/webhooks/secrets");
+    return request<any[]>("-daddy/webhooks/secrets");
   },
   async webhookUpsertSecret(payload: { source: string; enabled: boolean; bearerToken?: string | null }) {
-    return request<any>("/webhooks/secrets", { method: "POST", body: JSON.stringify(payload) });
+    return request<any>("-daddy/webhooks/secrets", { method: "POST", body: JSON.stringify(payload) });
   },
   async webhookRotateSecret(source: string) {
-    return request<any>(`/webhooks/secrets/${encodeURIComponent(source)}/rotate`, { method: "POST", body: JSON.stringify({}) });
+    return request<any>(`-daddy/webhooks/secrets/${encodeURIComponent(source)}/rotate`, { method: "POST", body: JSON.stringify({}) });
   },
   async webhookDisableSecret(source: string) {
-    return request<{ ok: boolean }>(`/webhooks/secrets/${encodeURIComponent(source)}`, { method: "DELETE" });
+    return request<{ ok: boolean }>(`-daddy/webhooks/secrets/${encodeURIComponent(source)}`, { method: "DELETE" });
   },
   async webhookEvents(source?: string | null, limit: number = 50) {
     const params: Record<string, string> = { limit: String(limit) };
     if (source) params.source = source;
-    return request<any[]>(`/webhooks/events?${new URLSearchParams(params)}`);
+    return request<any[]>(`-daddy/webhooks/events?${new URLSearchParams(params)}`);
   },
   async webhookReplay(eventId: string) {
-    return request<any>(`/webhooks/events/${eventId}/replay`, { method: "POST", body: JSON.stringify({}) });
+    return request<any>(`-daddy/webhooks/events/${eventId}/replay`, { method: "POST", body: JSON.stringify({}) });
   },
 
   async notificationDestinations() {

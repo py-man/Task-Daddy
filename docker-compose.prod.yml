@@ -12,17 +12,17 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_USER: neonlanes
+      POSTGRES_USER: taskdaddy
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.production}
-      POSTGRES_DB: neonlanes
+      POSTGRES_DB: taskdaddy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U neonlanes -d neonlanes"]
+      test: ["CMD-SHELL", "pg_isready -U taskdaddy -d taskdaddy"]
       interval: 10s
       timeout: 5s
       retries: 10
     volumes:
-      - neonlanes_db:/var/lib/postgresql/data
+      - taskdaddy_db:/var/lib/postgresql/data
       - ./apps/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   api:
@@ -31,7 +31,7 @@ services:
     env_file:
       - ./apps/api/.env
     environment:
-      DATABASE_URL: postgresql+asyncpg://neonlanes:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.production}@db:5432/neonlanes
+      DATABASE_URL: postgresql+asyncpg://taskdaddy:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.production}@db:5432/taskdaddy
     depends_on:
       db:
         condition: service_healthy
@@ -46,8 +46,8 @@ services:
     tmpfs:
       - /tmp
     volumes:
-      - neonlanes_uploads:/app/data/uploads
-      - neonlanes_backups:/app/data/backups
+      - taskdaddy_uploads:/app/data/uploads
+      - taskdaddy_backups:/app/data/backups
     command: >
       bash -lc "cd /app &&
       alembic upgrade head &&
@@ -75,6 +75,6 @@ services:
       - /tmp
 
 volumes:
-  neonlanes_db:
-  neonlanes_uploads:
-  neonlanes_backups:
+  taskdaddy_db:
+  taskdaddy_uploads:
+  taskdaddy_backups:

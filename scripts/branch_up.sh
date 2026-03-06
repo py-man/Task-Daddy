@@ -20,7 +20,7 @@ fi
 sum="$(echo -n "${slug}" | cksum | awk '{print $1}')"
 offset="$(( sum % 200 ))"
 
-export COMPOSE_PROJECT_NAME="neonlanes_${slug}"
+export COMPOSE_PROJECT_NAME="taskdaddy_${slug}"
 export DEPLOY_TRACK="branch-test"
 export DEPLOY_BRANCH="${branch}"
 export WEB_PORT="$(( 3200 + offset ))"

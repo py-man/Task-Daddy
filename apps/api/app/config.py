@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
   model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-  database_url: str = "postgresql+asyncpg://neonlanes:neonlanes@db:5432/neonlanes"
+  database_url: str = "postgresql+asyncpg://taskdaddy:taskdaddy@db:5432/taskdaddy"
   app_secret: str = ""
   fernet_key: str = ""
   app_version: str = "v2026-02-26+r3-hardening"

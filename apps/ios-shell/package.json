@@ -1,5 +1,5 @@
 {
-  "name": "@neonlanes/ios-shell",
+  "name": "@task-daddy/ios-shell",
   "private": true,
   "version": "0.1.0",
   "description": "Task-Daddy iOS Capacitor wrapper",

@@ -6,7 +6,7 @@ import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } 
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { AlertTriangle, CheckCircle2, Clock, GripVertical, Layers, ShieldAlert, Sparkles } from "lucide-react";
-import type { Lane, Task, User } from "@neonlanes/shared/schema";
+import type { Lane, Task, User } from "@task-daddy/shared/schema";
 import { cn } from "@/lib/cn";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

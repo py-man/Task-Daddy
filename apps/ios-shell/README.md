@@ -41,7 +41,7 @@ Set your signing + upload credentials:
 
 ```bash
 export IOS_TEAM_ID=YOUR_TEAM_ID
-export IOS_BUNDLE_ID=com.yourcompany.neonlanes
+export IOS_BUNDLE_ID=com.yourcompany.taskdaddy
 export APPSTORE_API_KEY_ID=YOUR_API_KEY_ID
 export APPSTORE_API_ISSUER_ID=YOUR_API_ISSUER_ID
 ```

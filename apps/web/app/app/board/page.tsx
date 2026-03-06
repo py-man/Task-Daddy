@@ -15,7 +15,7 @@ import { LaneColumn } from "@/components/swimlane";
 import { TaskDrawer } from "@/components/task-drawer";
 import { BoardHealthBar } from "@/components/board-health";
 import { useSession } from "@/components/session";
-import type { Lane, Task } from "@neonlanes/shared/schema";
+import type { Lane, Task } from "@task-daddy/shared/schema";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
 import { MobileBoardView } from "@/components/mobile/mobile-board-view";

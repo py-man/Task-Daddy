@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart3, CalendarDays, CheckCircle2, Clock3, LayoutList, PieChart, Rows3, TriangleAlert } from "lucide-react";
-import type { Task } from "@neonlanes/shared/schema";
+import type { Task } from "@task-daddy/shared/schema";
 import { useBoard } from "@/components/board-context";
 import { useSession } from "@/components/session";
 import { Button } from "@/components/ui/button";

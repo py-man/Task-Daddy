@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { User } from "@neonlanes/shared/schema";
+import type { User } from "@task-daddy/shared/schema";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 

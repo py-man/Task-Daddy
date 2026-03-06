@@ -20,7 +20,7 @@ if [[ -z "${db_container}" ]]; then
   exit 1
 fi
 
-docker exec "${db_container}" psql -U neonlanes -d neonlanes -t -A -c "
+docker exec "${db_container}" psql -U taskdaddy -d taskdaddy -t -A -c "
 select json_build_object(
   'generatedAt', now(),
   'boards', (

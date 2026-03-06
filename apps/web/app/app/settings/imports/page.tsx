@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import type { Board, BoardTaskPriority, BoardTaskType, Lane } from "@neonlanes/shared/schema";
+import type { Board, BoardTaskPriority, BoardTaskType, Lane } from "@task-daddy/shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

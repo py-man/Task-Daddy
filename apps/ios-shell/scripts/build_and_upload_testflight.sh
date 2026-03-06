@@ -31,7 +31,7 @@ if [[ -z "$TEAM_ID" ]]; then
 fi
 
 if [[ -z "$BUNDLE_ID" ]]; then
-  echo "Missing IOS_BUNDLE_ID. Example: export IOS_BUNDLE_ID=com.example.neonlanes"
+  echo "Missing IOS_BUNDLE_ID. Example: export IOS_BUNDLE_ID=com.example.taskdaddy"
   exit 1
 fi
 

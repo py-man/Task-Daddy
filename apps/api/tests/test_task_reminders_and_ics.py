@@ -72,7 +72,7 @@ async def test_task_ics_email_uses_enabled_smtp_destination(client: AsyncClient,
             "port": 587,
             "username": "u",
             "password": "p",
-            "from": "neonlanes@example.com",
+            "from": "taskdaddy@example.com",
             "to": "fallback@example.com",
             "starttls": True,
           }

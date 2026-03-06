@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRightLeft, CheckCircle2, ShieldAlert } from "lucide-react";
-import type { BoardTaskPriority, Lane, Task, User } from "@neonlanes/shared/schema";
+import type { BoardTaskPriority, Lane, Task, User } from "@task-daddy/shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";

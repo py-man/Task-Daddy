@@ -138,7 +138,7 @@ async def _clean_between_tests() -> None:
   if "test" not in db_name:
     raise RuntimeError(
       "Refusing to run destructive tests against non-test DB. "
-      "Set DATABASE_URL to a *_test database (e.g. neonlanes_test)."
+      "Set DATABASE_URL to a *_test database (e.g. taskdaddy_test)."
     )
   await _reset_db()
   yield

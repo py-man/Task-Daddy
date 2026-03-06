@@ -8,7 +8,7 @@ if [[ "$BRANCH" != "main" && "${ALLOW_NON_MAIN_RESET:-0}" != "1" ]]; then
 fi
 export DEPLOY_TRACK=production
 export DEPLOY_BRANCH="$BRANCH"
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-neonlanes}"
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-taskdaddy}"
 ./scripts/pre_restart_backup.sh
 docker-compose down -v --remove-orphans
 docker-compose up --build -d

@@ -11,6 +11,6 @@ if [[ -z "${slug}" ]]; then
   exit 1
 fi
 
-export COMPOSE_PROJECT_NAME="neonlanes_${slug}"
+export COMPOSE_PROJECT_NAME="taskdaddy_${slug}"
 echo "Stopping isolated branch stack: ${COMPOSE_PROJECT_NAME}"
 docker-compose down --remove-orphans

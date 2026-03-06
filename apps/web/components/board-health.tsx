@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { AlertTriangle, CheckCircle2, Clock, ShieldAlert } from "lucide-react";
-import type { Lane, Task } from "@neonlanes/shared/schema";
+import type { Lane, Task } from "@task-daddy/shared/schema";
 import { cn } from "@/lib/cn";
 
 function parseTimeMs(s?: string | null) {

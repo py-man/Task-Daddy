@@ -7,7 +7,7 @@ mkdir -p "$ARTIFACT_DIR"
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 API_BASE="${API_BASE:-http://127.0.0.1:8000}"
 WEB_BASE="${WEB_BASE:-http://127.0.0.1:3000}"
-NIGHTLY_ADMIN_EMAIL="${NIGHTLY_ADMIN_EMAIL:-admin@neonlanes.local}"
+NIGHTLY_ADMIN_EMAIL="${NIGHTLY_ADMIN_EMAIL:-admin@taskdaddy.local}"
 NIGHTLY_ADMIN_PASSWORD="${NIGHTLY_ADMIN_PASSWORD:-admin1234}"
 
 write_file_if_missing() {
@@ -63,11 +63,11 @@ if docker compose ps db >/dev/null 2>&1; then
   {
     echo "Nightly DB summary ($TIMESTAMP)"
     echo "----------------------------------"
-    docker compose exec -T db psql -U neonlanes -d neonlanes -Atc "select 'connections='||count(*) from pg_stat_activity where datname = current_database();" || true
-    docker compose exec -T db psql -U neonlanes -d neonlanes -Atc "select 'active='||count(*) from pg_stat_activity where datname = current_database() and state='active';" || true
-    docker compose exec -T db psql -U neonlanes -d neonlanes -Atc "select 'waiting_locks='||count(*) from pg_stat_activity where datname = current_database() and wait_event_type='Lock';" || true
+    docker compose exec -T db psql -U taskdaddy -d taskdaddy -Atc "select 'connections='||count(*) from pg_stat_activity where datname = current_database();" || true
+    docker compose exec -T db psql -U taskdaddy -d taskdaddy -Atc "select 'active='||count(*) from pg_stat_activity where datname = current_database() and state='active';" || true
+    docker compose exec -T db psql -U taskdaddy -d taskdaddy -Atc "select 'waiting_locks='||count(*) from pg_stat_activity where datname = current_database() and wait_event_type='Lock';" || true
     echo "top_long_queries:"
-    docker compose exec -T db psql -U neonlanes -d neonlanes -Atc "select pid||'|'||coalesce((now()-query_start)::text,'n/a')||'|'||left(regexp_replace(query, E'\\\\s+', ' ', 'g'), 120) from pg_stat_activity where datname = current_database() and state='active' and query_start is not null order by (now()-query_start) desc limit 10;" || true
+    docker compose exec -T db psql -U taskdaddy -d taskdaddy -Atc "select pid||'|'||coalesce((now()-query_start)::text,'n/a')||'|'||left(regexp_replace(query, E'\\\\s+', ' ', 'g'), 120) from pg_stat_activity where datname = current_database() and state='active' and query_start is not null order by (now()-query_start) desc limit 10;" || true
   } >"$ARTIFACT_DIR/db_report.txt"
 else
   cat <<EOF >"$ARTIFACT_DIR/db_report.txt"

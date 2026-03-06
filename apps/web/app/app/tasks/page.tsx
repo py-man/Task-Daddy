@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { TaskDrawer } from "@/components/task-drawer";
 import { EmptyState } from "@/components/empty-state";
 import { cn } from "@/lib/cn";
-import type { Task } from "@neonlanes/shared/schema";
+import type { Task } from "@task-daddy/shared/schema";
 
 function dueMeta(dueDate?: string | null) {
   if (!dueDate) return { has: false as const, overdue: false, dueSoon: false, label: "" };

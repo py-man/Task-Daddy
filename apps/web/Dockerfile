@@ -21,7 +21,7 @@ ENV NEXT_PUBLIC_APP_VERSION=v2026-02-26+r3-hardening
 COPY apps/web /repo/apps/web
 COPY packages/shared /repo/packages/shared
 
-RUN npm -w @neonlanes/web run build
+RUN npm -w @task-daddy/web run build
 
 FROM node:20-slim AS runner
 
@@ -35,4 +35,4 @@ COPY --from=builder /repo/packages/shared /repo/packages/shared
 
 EXPOSE 3000
 
-CMD ["npm","-w","@neonlanes/web","run","start","--","--hostname","0.0.0.0","--port","3000"]
+CMD ["npm","-w","@task-daddy/web","run","start","--","--hostname","0.0.0.0","--port","3000"]

@@ -93,8 +93,8 @@ async def test_full_backup_create_list_restore_idempotent(client):
 
 
 def test_purge_old_backups_deletes_files(tmp_path: Path):
-  old = tmp_path / "neonlanes_backup_20000101_000000_deadbeef.tar.gz"
-  keep = tmp_path / "neonlanes_backup_20990101_000000_deadbeef.tar.gz"
+  old = tmp_path / "taskdaddy_backup_20000101_000000_deadbeef.tar.gz"
+  keep = tmp_path / "taskdaddy_backup_20990101_000000_deadbeef.tar.gz"
   old.write_bytes(b"x")
   keep.write_bytes(b"x")
 
@@ -120,7 +120,7 @@ def test_should_run_scheduled_backup_respects_min_interval(tmp_path: Path):
     settings.backup_dir = str(tmp_path)
     assert should_run_scheduled_backup(min_interval_minutes=60)[0] is True
 
-    recent = tmp_path / "neonlanes_backup_recent.tar.gz"
+    recent = tmp_path / "taskdaddy_backup_recent.tar.gz"
     recent.write_bytes(b"x")
     run_now, wait_seconds = should_run_scheduled_backup(min_interval_minutes=60)
     assert run_now is False

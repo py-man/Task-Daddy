@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { Board, BoardTaskPriority, BoardTaskType, Lane, Task, User } from "@neonlanes/shared/schema";
+import type { Board, BoardTaskPriority, BoardTaskType, Lane, Task, User } from "@task-daddy/shared/schema";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 

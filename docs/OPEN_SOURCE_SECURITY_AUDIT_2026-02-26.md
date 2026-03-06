@@ -1,12 +1,12 @@
 # Open Source Security + Privacy Audit (2026-02-26)
 
-Scope: `opensource-neon` branch intended for public Task-Daddy release.
+Scope: public Task-Daddy release branch/export intended for open-source publication.
 
 ## Outcome
 
 - No committed runtime `.env` files or plaintext secrets found.
 - No Kevin/company/domain-specific identifiers found in tracked source/docs after sanitization pass.
-- Internal/private operational memory/backlog docs removed from OSS branch.
+- Internal/private operational memory/backlog docs removed from the public release tree.
 - Branding/user-facing defaults updated to Task-Daddy naming.
 
 ## Checks performed
@@ -23,8 +23,8 @@ Scope: `opensource-neon` branch intended for public Task-Daddy release.
 
 ## Residual notes
 
-- Internal package/workspace names may still include `neonlanes` (non-user-facing technical identifiers).
-- Git history still exists inside the source repository branch; public release must use a fresh orphan repo export.
+- Some technical defaults may still use `taskdaddy` as a database or local domain identifier; this is acceptable when it is non-sensitive and product-aligned.
+- Git history still exists inside the source repository branch; public release should use a fresh export or a reviewed public history.
 
 ## Release gate
 

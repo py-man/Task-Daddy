@@ -339,7 +339,7 @@ async def _snapshot(db: AsyncSession) -> dict[str, Any]:
 async def create_full_backup(db: AsyncSession) -> BackupInfo:
   backup_dir = _ensure_backup_dir()
   created = _now_utc()
-  filename = f"neonlanes_backup_{created.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.tar.gz"
+  filename = f"taskdaddy_backup_{created.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.tar.gz"
   out_path = backup_dir / filename
 
   snap = await _snapshot(db)
@@ -493,7 +493,7 @@ async def create_full_backup(db: AsyncSession) -> BackupInfo:
     [["id", "name", "provider", "enabled", "createdAt", "updatedAt"]]
     + [[n["id"], n["name"], n["provider"], "true" if n["enabled"] else "false", n["createdAt"], n["updatedAt"]] for n in snap["notificationDestinations"]]
   )
-  exports["exports/webhook_sources.csv"] = _csv_bytes([["id", "source", "enabled"]] + [[w["id"], w["source"], "true" if w["enabled"] else "false"] for w in snap["webhookSources"]])
+  exports["exports-daddy/webhook_sources.csv"] = _csv_bytes([["id", "source", "enabled"]] + [[w["id"], w["source"], "true" if w["enabled"] else "false"] for w in snap["webhookSources"]])
 
   meta = {
     "createdAt": created.isoformat().replace("+00:00", "Z"),
@@ -522,7 +522,7 @@ async def create_full_backup(db: AsyncSession) -> BackupInfo:
 
 def _parse_db_url_parts() -> tuple[str, int, str, str | None, str]:
   raw = str(settings.database_url or "").strip()
-  # Supports e.g. postgresql+asyncpg://user:pass@db:5432/neonlanes
+  # Supports e.g. postgresql+asyncpg://user:pass@db:5432/taskdaddy
   normalized = raw.replace("postgresql+asyncpg://", "postgresql://", 1)
   p = urlparse(normalized)
   if p.scheme not in ("postgresql", "postgres"):
@@ -600,9 +600,9 @@ def list_backups() -> list[BackupInfo]:
   backup_dir = _ensure_backup_dir()
   out: list[BackupInfo] = []
   archives = []
-  archives.extend(backup_dir.glob("neonlanes_backup_*.tar.gz"))
   archives.extend(backup_dir.glob("taskdaddy_backup_*.tar.gz"))
-  archives.extend(backup_dir.glob("neonlanes_full_export_*.tar.gz"))
+  archives.extend(backup_dir.glob("taskdaddy_backup_*.tar.gz"))
+  archives.extend(backup_dir.glob("taskdaddy_full_export_*.tar.gz"))
   archives.extend(backup_dir.glob("taskdaddy_full_export_*.tar.gz"))
   for p in sorted(archives, key=lambda x: x.stat().st_mtime, reverse=True):
     st = p.stat()
@@ -790,7 +790,7 @@ async def restore_full_backup(db: AsyncSession, *, filename: str, mode: str, dry
   if not tar_path.exists():
     raise FileNotFoundError("Backup not found")
 
-  with tempfile.TemporaryDirectory(prefix="neonlanes_restore_") as td:
+  with tempfile.TemporaryDirectory(prefix="taskdaddy_restore_") as td:
     td_path = Path(td)
     _safe_extract_tar(tar_path, td_path)
     snap_path = td_path / "snapshot.json"
