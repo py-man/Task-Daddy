@@ -9,5 +9,8 @@
     "lint": "npm -w @task-daddy/web run lint",
     "format": "npm -w @task-daddy/web run format",
     "typecheck": "npm -w @task-daddy/web run typecheck"
+  },
+  "overrides": {
+    "tar": "^7.5.10"
   }
 }
