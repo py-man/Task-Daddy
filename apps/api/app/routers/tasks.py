@@ -54,6 +54,7 @@ from app.schemas import (
   TaskBoardDuplicateIn,
   TaskBoardMoveIn,
   TaskCreateIn,
+  TaskSubtaskCreateIn,
   TaskMoveIn,
   TaskOut,
   TaskIcsEmailIn,
@@ -109,10 +110,36 @@ async def _validate_type_and_priority(board_id: str, *, task_type: str | None, p
       raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid priority (not enabled for this board)")
 
 
+async def _resolve_parent_task(board_id: str, parent_task_id: str | None, db: AsyncSession) -> Task | None:
+  if not parent_task_id:
+    return None
+  res = await db.execute(select(Task).where(Task.id == parent_task_id))
+  parent = res.scalar_one_or_none()
+  if not parent or parent.board_id != board_id:
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid parentTaskId")
+  return parent
+
+
+async def _ensure_no_parent_cycle(task_id: str, parent: Task | None, db: AsyncSession) -> None:
+  current = parent
+  seen: set[str] = set()
+  while current is not None:
+    if current.id == task_id:
+      raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Parent assignment would create a cycle")
+    if current.id in seen:
+      raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Parent assignment would create a cycle")
+    seen.add(current.id)
+    if not current.parent_task_id:
+      return
+    res = await db.execute(select(Task).where(Task.id == current.parent_task_id))
+    current = res.scalar_one_or_none()
+
+
 def _task_out(t: Task) -> TaskOut:
   return TaskOut(
     id=t.id,
     boardId=t.board_id,
+    parentTaskId=t.parent_task_id,
     laneId=t.lane_id,
     stateKey=t.state_key,
     title=t.title,
@@ -405,12 +432,14 @@ async def create_task(
 
   await _validate_owner(board_id, payload.ownerId, db)
   await _validate_type_and_priority(board_id, task_type=payload.type, priority=payload.priority, db=db)
+  parent = await _resolve_parent_task(board_id, payload.parentTaskId, db)
 
   ores = await db.execute(select(func.max(Task.order_index)).where(Task.board_id == board_id, Task.lane_id == lane.id))
   max_order = ores.scalar_one()
   new_order = (max_order + 1) if max_order is not None else 0
   t = Task(
     board_id=board_id,
+    parent_task_id=parent.id if parent else None,
     lane_id=lane.id,
     state_key=lane.state_key,
     title=payload.title,
@@ -500,6 +529,77 @@ async def get_task(task_id: str, user: User = Depends(get_current_user), db: Asy
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
   await require_board_role(t.board_id, "viewer", user, db)
   return _task_out(t)
+
+
+@router.get("/tasks/{task_id}/subtasks", response_model=list[TaskOut])
+async def list_subtasks(task_id: str, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)) -> list[TaskOut]:
+  res = await db.execute(select(Task).where(Task.id == task_id))
+  parent = res.scalar_one_or_none()
+  if not parent:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+  await require_board_role(parent.board_id, "viewer", user, db)
+  q = select(Task).where(Task.board_id == parent.board_id, Task.parent_task_id == parent.id).order_by(Task.order_index.asc(), Task.created_at.asc())
+  sres = await db.execute(q)
+  return [_task_out(t) for t in sres.scalars().all()]
+
+
+@router.post("/tasks/{task_id}/subtasks", response_model=TaskOut)
+async def create_subtask(
+  task_id: str,
+  payload: TaskSubtaskCreateIn,
+  user: User = Depends(get_current_user),
+  db: AsyncSession = Depends(get_db),
+) -> TaskOut:
+  res = await db.execute(select(Task).where(Task.id == task_id))
+  parent = res.scalar_one_or_none()
+  if not parent:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+  await require_board_role(parent.board_id, "member", user, db)
+
+  target_lane_id = payload.laneId or parent.lane_id
+  lres = await db.execute(select(Lane).where(Lane.id == target_lane_id))
+  lane = lres.scalar_one_or_none()
+  if not lane or lane.board_id != parent.board_id:
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid laneId")
+
+  await _validate_owner(parent.board_id, payload.ownerId, db)
+  await _validate_type_and_priority(parent.board_id, task_type=payload.type, priority=payload.priority, db=db)
+
+  ores = await db.execute(select(func.max(Task.order_index)).where(Task.board_id == parent.board_id, Task.lane_id == lane.id))
+  max_order = ores.scalar_one()
+  new_order = (max_order + 1) if max_order is not None else 0
+
+  sub = Task(
+    board_id=parent.board_id,
+    parent_task_id=parent.id,
+    lane_id=lane.id,
+    state_key=lane.state_key,
+    title=payload.title,
+    description=payload.description or "",
+    owner_id=payload.ownerId,
+    priority=payload.priority,
+    type=payload.type,
+    tags=list(payload.tags or []),
+    due_date=payload.dueDate,
+    estimate_minutes=payload.estimateMinutes,
+    blocked=payload.blocked,
+    blocked_reason=payload.blockedReason,
+    order_index=new_order,
+    version=0,
+  )
+  db.add(sub)
+  await write_audit(
+    db,
+    event_type="task.subtask.created",
+    entity_type="Task",
+    entity_id=sub.id,
+    board_id=parent.board_id,
+    task_id=sub.id,
+    actor_id=user.id,
+    payload={"parentTaskId": parent.id, "laneId": sub.lane_id, "title": sub.title},
+  )
+  await db.commit()
+  return _task_out(sub)
 
 
 @router.get("/tasks/{task_id}/ics")
@@ -686,7 +786,15 @@ async def update_task(task_id: str, payload: TaskUpdateIn, user: User = Depends(
   old_due = t.due_date
   external_messages: list[NotificationMessage] = []
 
-  fields_set = getattr(payload, "model_fields_set", getattr(payload, "__fields_set__", set()))
+  fields_set = getattr(payload, "model_fields_set", None)
+  if fields_set is None:
+    fields_set = getattr(payload, "__fields_set__", set())
+  if "parentTaskId" in fields_set:
+    parent = await _resolve_parent_task(t.board_id, payload.parentTaskId, db)
+    if parent and parent.id == t.id:
+      raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task cannot be its own parent")
+    await _ensure_no_parent_cycle(t.id, parent, db)
+    t.parent_task_id = parent.id if parent else None
   if "ownerId" in fields_set:
     await _validate_owner(t.board_id, payload.ownerId, db)
   if "type" in fields_set or "priority" in fields_set:
@@ -705,6 +813,8 @@ async def update_task(task_id: str, payload: TaskUpdateIn, user: User = Depends(
     ("blocked", "blocked"),
     ("blocked_reason", "blockedReason"),
   ]
+  if "parentTaskId" in fields_set:
+    changed["parentTaskId"] = t.parent_task_id
   for model_attr, field_name in mapping:
     if field_name in fields_set:
       val = getattr(payload, field_name)
@@ -776,6 +886,12 @@ async def delete_task(task_id: str, user: User = Depends(get_current_user), db: 
   if not t:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
   await require_board_role(t.board_id, "member", user, db)
+  now = datetime.now(timezone.utc)
+  await db.execute(
+    update(Task)
+    .where(Task.parent_task_id == task_id)
+    .values(parent_task_id=None, updated_at=now, version=Task.version + 1)
+  )
   await db.execute(delete(Task).where(Task.id == task_id))
   await write_audit(
     db,

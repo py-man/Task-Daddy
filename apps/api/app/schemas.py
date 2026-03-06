@@ -258,6 +258,7 @@ class TaskCreateIn(BaseModel):
   laneId: str
   title: str
   description: str = ""
+  parentTaskId: str | None = None
   ownerId: str | None = None
   priority: str = Field(default="P2", min_length=1, max_length=64)
   type: str = Field(default="Feature", min_length=1, max_length=64)
@@ -277,6 +278,7 @@ class TaskUpdateIn(BaseModel):
   version: int
   title: str | None = None
   description: str | None = None
+  parentTaskId: str | None = None
   ownerId: str | None = None
   priority: str | None = Field(default=None, min_length=1, max_length=64)
   type: str | None = Field(default=None, min_length=1, max_length=64)
@@ -298,6 +300,25 @@ class TaskMoveIn(BaseModel):
   version: int
 
 
+class TaskSubtaskCreateIn(BaseModel):
+  title: str
+  description: str = ""
+  laneId: str | None = None
+  ownerId: str | None = None
+  priority: str = Field(default="P2", min_length=1, max_length=64)
+  type: str = Field(default="Feature", min_length=1, max_length=64)
+  tags: list[str] = []
+  dueDate: datetime | None = None
+  estimateMinutes: int | None = None
+  blocked: bool = False
+  blockedReason: str | None = None
+
+  @field_validator("dueDate", mode="before")
+  @classmethod
+  def _due_date_to_utc(cls, v: object) -> object:
+    return _parse_dt_utc(v)
+
+
 class TaskBoardMoveIn(BaseModel):
   targetBoardId: str
   targetLaneId: str | None = None
@@ -316,6 +337,7 @@ class TaskBoardDuplicateIn(BaseModel):
 class TaskOut(BaseModel):
   id: str
   boardId: str
+  parentTaskId: str | None
   laneId: str
   stateKey: str
   title: str

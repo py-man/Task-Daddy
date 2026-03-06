@@ -180,6 +180,12 @@ export const api = {
   async task(taskId: string) {
     return request<Task>(`/tasks/${taskId}`);
   },
+  async taskSubtasks(taskId: string) {
+    return request<Task[]>(`/tasks/${taskId}/subtasks`);
+  },
+  async createSubtask(taskId: string, payload: { title: string; description?: string; laneId?: string | null }) {
+    return request<Task>(`/tasks/${taskId}/subtasks`, { method: "POST", body: JSON.stringify(payload) });
+  },
   async taskTypes(boardId: string) {
     return request<BoardTaskType[]>(`/boards/${boardId}/task_types`);
   },

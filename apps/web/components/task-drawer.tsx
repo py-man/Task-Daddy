@@ -88,6 +88,9 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
   const [aiAction, setAiAction] = useState<string>("summarize");
   const [checklist, setChecklist] = useState<any[] | null>(null);
   const [comments, setComments] = useState<any[] | null>(null);
+  const [subtasks, setSubtasks] = useState<any[] | null>(null);
+  const [subtaskTitle, setSubtaskTitle] = useState("");
+  const [subtaskSaving, setSubtaskSaving] = useState(false);
   const [deps, setDeps] = useState<any[] | null>(null);
   const [depPick, setDepPick] = useState<string>("");
   const [activity, setActivity] = useState<any[] | null>(null);
@@ -203,6 +206,8 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
     setAiText("");
     setChecklist(null);
     setComments(null);
+    setSubtasks(null);
+    setSubtaskTitle("");
     setDeps(null);
     setActivity(null);
     setAttachments(null);
@@ -354,15 +359,17 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
   const loadDetailsSidecars = async () => {
     if (!taskId) return;
     try {
-      const [cl, cm, dp, at, rm] = await Promise.all([
+      const [cl, cm, st, dp, at, rm] = await Promise.all([
         api.checklist(taskId),
         api.comments(taskId),
+        api.taskSubtasks(taskId),
         api.dependencies(taskId),
         api.attachments(taskId),
         api.taskReminders(taskId)
       ]);
       setChecklist(cl);
       setComments(cm);
+      setSubtasks(st);
       setDeps(dp);
       setAttachments(at);
       setReminders(rm);
@@ -1285,6 +1292,82 @@ export function TaskDrawer({ taskId, onClose }: { taskId: string | null; onClose
                                   ))}
                                 </div>
                               )}
+                            </div>
+                          </details>
+
+                          <details className="rounded-2xl border border-white/10 bg-white/5 p-3" open={isMobileViewport || (!isFocusLayout && !isCompactLayout)}>
+                            <summary className="cursor-pointer list-none flex items-center justify-between gap-2">
+                              <div className="text-sm font-semibold">Subtasks</div>
+                              <div className="text-xs text-muted">Break work into smaller items</div>
+                            </summary>
+                            <div className="mt-3 space-y-3">
+                              {subtasks === null ? (
+                                <Skeleton className="h-16 w-full" />
+                              ) : subtasks.length === 0 ? (
+                                <div className="text-xs text-muted">No subtasks yet.</div>
+                              ) : (
+                                <div className="space-y-2">
+                                  {subtasks.map((st) => (
+                                    <div key={st.id} className="rounded-2xl border border-white/10 bg-white/5 p-2">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <div className="text-sm font-semibold">{st.title}</div>
+                                        <Badge variant={st.blocked ? "danger" : st.stateKey === "done" ? "accent" : "muted"}>
+                                          {st.blocked ? "Blocked" : st.stateKey === "done" ? "Done" : "Active"}
+                                        </Badge>
+                                      </div>
+                                      <div className="mt-1 text-xs text-muted">
+                                        Lane: {lanes.find((l) => l.id === st.laneId)?.name || "—"}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  placeholder="Add a subtask title…"
+                                  value={subtaskTitle}
+                                  onChange={(e) => setSubtaskTitle(e.target.value)}
+                                  onKeyDown={async (e) => {
+                                    if (e.key !== "Enter") return;
+                                    if (!taskId) return;
+                                    const title = subtaskTitle.trim();
+                                    if (!title) return;
+                                    try {
+                                      setSubtaskSaving(true);
+                                      await api.createSubtask(taskId, { title });
+                                      setSubtaskTitle("");
+                                      await loadDetailsSidecars();
+                                      await refreshAll();
+                                    } catch (err: any) {
+                                      toast.error(String(err?.message || err));
+                                    } finally {
+                                      setSubtaskSaving(false);
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  disabled={!taskId || !subtaskTitle.trim() || subtaskSaving}
+                                  onClick={async () => {
+                                    if (!taskId) return;
+                                    const title = subtaskTitle.trim();
+                                    if (!title) return;
+                                    try {
+                                      setSubtaskSaving(true);
+                                      await api.createSubtask(taskId, { title });
+                                      setSubtaskTitle("");
+                                      await loadDetailsSidecars();
+                                      await refreshAll();
+                                    } catch (err: any) {
+                                      toast.error(String(err?.message || err));
+                                    } finally {
+                                      setSubtaskSaving(false);
+                                    }
+                                  }}
+                                >
+                                  {subtaskSaving ? <Loader2 className="animate-spin" size={14} /> : <Plus size={14} />} Add
+                                </Button>
+                              </div>
                             </div>
                           </details>
 
