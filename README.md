@@ -1,5 +1,7 @@
 # Task-Daddy
 
+Operational recovery, cluster execution and release rules are canonical in [`.yard/PROJECT_RECOVERY.md`](.yard/PROJECT_RECOVERY.md).
+
 <p align="center"><strong>Small tasks. Big momentum.</strong></p>
 
 Stop keeping your whole life in your head.

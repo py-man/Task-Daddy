@@ -1,5 +1,7 @@
 # Task-Daddy AGENTS.md
 
+Read `.yard/PROJECT_RECOVERY.md` before build, restart, release or recovery work.
+
 ## Repo Role
 - `task-daddy` is the open-source stripped distribution.
 - Do not place private environment details, production identifiers, or internal-only tooling code here.

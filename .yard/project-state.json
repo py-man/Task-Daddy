@@ -1,7 +1,8 @@
 {
   "contract_version": 1,
   "captured_at": "2026-08-30T14:50:27.074569+00:00",
-  "project": "task-daddy-release-20260226",
+    "project": "taskdaddy",
+    "canonical_operational_document": ".yard/PROJECT_RECOVERY.md",
   "repository": {
     "origin": "https://github.com/py-man/Task-Daddy.git",
     "head": "b7cb9bbb6e66882f9a6d3063fe676bb903e2f42b",
@@ -49,9 +50,17 @@
       "Docker Engine and Docker Compose",
       "PostgreSQL and Redis services declared in docker-compose.yml"
     ],
-    "notes_and_memory": [
-      "Read AGENTS.md before build, restart, or release work.",
-      "Never commit .env files, credentials, PEM files, or encrypted secret bundles."
-    ]
+        "notes_and_memory": [
+            "Read AGENTS.md before build, restart, or release work.",
+            "Never commit .env files, credentials, PEM files, or encrypted secret bundles.",
+            ".yard/PROJECT_RECOVERY.md",
+            "docs/PROJECT_MEMORY.md"
+        ],
+        "workflow": {
+            "windmill_workspace": "kevin-local-projects",
+            "ci_script": "u/admin/taskdaddy_ci",
+            "required_secret_reference": "u/admin/taskdaddy_github_deploy_key"
+        },
+        "production_release_requires_approval": true
   }
 }
