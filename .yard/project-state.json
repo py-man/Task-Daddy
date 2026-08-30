@@ -1,0 +1,57 @@
+{
+  "contract_version": 1,
+  "captured_at": "2026-08-30T14:50:27.074569+00:00",
+  "project": "task-daddy-release-20260226",
+  "repository": {
+    "origin": "https://github.com/py-man/Task-Daddy.git",
+    "head": "b7cb9bbb6e66882f9a6d3063fe676bb903e2f42b",
+    "branch": "main",
+    "dirty_at_capture": false
+  },
+  "runtime_files": [
+    "AGENTS.md",
+    "apps/api/Dockerfile",
+    "apps/api/Makefile",
+    "apps/api/pyproject.toml",
+    "apps/api/requirements.txt",
+    "apps/ios-shell/package.json",
+    "apps/web/Dockerfile",
+    "apps/web/package.json",
+    "docker-compose.yml",
+    "package.json",
+    "packages/shared/package.json"
+  ],
+  "secret_references": [
+    ".env",
+    "apps/api/.env",
+    "apps/web/.env"
+  ],
+  "required_manual_fields": {
+    "build_commands": [
+      "./bootstrap.sh",
+      "FORCE_BUILD=1 ./bootstrap.sh"
+    ],
+    "verify_commands": [
+      "curl -fsS http://127.0.0.1:8000/health",
+      "curl -fsS http://127.0.0.1:3010/"
+    ],
+    "start_commands": [
+      "./bootstrap.sh"
+    ],
+    "health_endpoints": [
+      "http://127.0.0.1:8000/health",
+      "http://127.0.0.1:3010/"
+    ],
+    "persistent_data": [
+      "Docker named volumes declared in docker-compose.yml, including taskdaddy_backups."
+    ],
+    "external_dependencies": [
+      "Docker Engine and Docker Compose",
+      "PostgreSQL and Redis services declared in docker-compose.yml"
+    ],
+    "notes_and_memory": [
+      "Read AGENTS.md before build, restart, or release work.",
+      "Never commit .env files, credentials, PEM files, or encrypted secret bundles."
+    ]
+  }
+}
